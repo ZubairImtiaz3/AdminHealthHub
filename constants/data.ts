@@ -1,94 +1,85 @@
 import { Icons } from '@/components/icons';
 import { NavItem, SidebarNavItem } from '@/types';
 
-export type User = {
+export type Patient = {
   id: number;
   name: string;
-  company: string;
-  role: string;
-  verified: boolean;
-  status: string;
+  gender: string;
+  phone: string;
+  email: string;
 };
-export const users: User[] = [
+
+// dummy data for patients
+export const patients: Patient[] = [
   {
     id: 1,
     name: 'Candice Schiner',
-    company: 'Dell',
-    role: 'Frontend Developer',
-    verified: false,
-    status: 'Active'
+    gender: 'Female',
+    phone: '123-456-7890',
+    email: 'candice.schiner@example.com'
   },
   {
     id: 2,
     name: 'John Doe',
-    company: 'TechCorp',
-    role: 'Backend Developer',
-    verified: true,
-    status: 'Active'
+    gender: 'Male',
+    phone: '234-567-8901',
+    email: 'john.doe@example.com'
   },
   {
     id: 3,
     name: 'Alice Johnson',
-    company: 'WebTech',
-    role: 'UI Designer',
-    verified: true,
-    status: 'Active'
+    gender: 'Female',
+    phone: '345-678-9012',
+    email: 'alice.johnson@example.com'
   },
   {
     id: 4,
     name: 'David Smith',
-    company: 'Innovate Inc.',
-    role: 'Fullstack Developer',
-    verified: false,
-    status: 'Inactive'
+    gender: 'Male',
+    phone: '456-789-0123',
+    email: 'david.smith@example.com'
   },
   {
     id: 5,
     name: 'Emma Wilson',
-    company: 'TechGuru',
-    role: 'Product Manager',
-    verified: true,
-    status: 'Active'
+    gender: 'Female',
+    phone: '567-890-1234',
+    email: 'emma.wilson@example.com'
   },
   {
     id: 6,
     name: 'James Brown',
-    company: 'CodeGenius',
-    role: 'QA Engineer',
-    verified: false,
-    status: 'Active'
+    gender: 'Male',
+    phone: '678-901-2345',
+    email: 'james.brown@example.com'
   },
   {
     id: 7,
     name: 'Laura White',
-    company: 'SoftWorks',
-    role: 'UX Designer',
-    verified: true,
-    status: 'Active'
+    gender: 'Female',
+    phone: '789-012-3456',
+    email: 'laura.white@example.com'
   },
   {
     id: 8,
     name: 'Michael Lee',
-    company: 'DevCraft',
-    role: 'DevOps Engineer',
-    verified: false,
-    status: 'Active'
+    gender: 'Male',
+    phone: '890-123-4567',
+    email: 'michael.lee@example.com'
   },
   {
     id: 9,
     name: 'Olivia Green',
-    company: 'WebSolutions',
-    role: 'Frontend Developer',
-    verified: true,
-    status: 'Active'
+    gender: 'Female',
+    phone: '901-234-5678',
+    email: 'olivia.green@example.com'
   },
   {
     id: 10,
     name: 'Robert Taylor',
-    company: 'DataTech',
-    role: 'Data Analyst',
-    verified: false,
-    status: 'Active'
+    gender: 'Male',
+    phone: '012-345-6789',
+    email: 'robert.taylor@example.com'
   }
 ];
 
@@ -119,10 +110,10 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'User',
-    href: '/dashboard/user',
+    title: 'Patients',
+    href: '/dashboard/patients',
     icon: 'user',
-    label: 'user'
+    label: 'patients'
   },
   {
     title: 'Employee',
