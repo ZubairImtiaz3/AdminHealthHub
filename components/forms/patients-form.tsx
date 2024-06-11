@@ -25,8 +25,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-// import FileUpload from "@/components/FileUpload";
 import { useToast } from '../ui/use-toast';
 
 const ImgSchema = z.object({
@@ -136,8 +134,6 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
     }
   };
 
-  const triggerImgUrlValidation = () => form.trigger('imgUrl');
-
   return (
     <>
       {/* <AlertModal
@@ -165,23 +161,6 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-full space-y-8"
         >
-          <FormField
-            control={form.control}
-            name="imgUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Images</FormLabel>
-                <FormControl>
-                  {/* <FileUpload
-                    onChange={field.onChange}
-                    value={field.value}
-                    onRemove={field.onChange}
-                  /> */}
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="gap-8 md:grid md:grid-cols-3">
             {/* first name */}
             <FormField
