@@ -11,10 +11,6 @@ echo '🏗️👷 Styling, testing and building your project before committing'
 #         false; 
 # )
 
-# Format Code
-echo ' Formatting the code according to Prettier standards';
-npm run format
-
 # If everything passes... Now we can commit
 echo '🤔🤔🤔🤔... Alright.... Code looks good to me... Trying to build now. 🤔🤔🤔🤔'
 
@@ -25,6 +21,10 @@ npm run build ||
     '
     false;
 )
+
+# Format Code
+echo ' Formatting the code according to Prettier standards';
+npm run format
 
 # If everything passes... Now we can commit
 echo '✅✅✅✅ You win this time... I am committing this now. ✅✅✅✅'
