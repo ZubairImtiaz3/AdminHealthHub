@@ -185,7 +185,7 @@ export const navItems: NavItem[] = [
   {
     title: 'Patients',
     href: '/dashboard/patients',
-    icon: 'user',
+    icon: 'users',
     label: 'patients'
   },
   {
