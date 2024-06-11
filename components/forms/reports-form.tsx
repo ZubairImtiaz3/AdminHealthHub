@@ -41,8 +41,7 @@ const ImgSchema = z.object({
 });
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
-  firstName: z.string().min(1, { message: 'Patient First Name is required' }),
-  lastName: z.string().min(1, { message: 'Patient Last Name is required' }),
+  name: z.string().min(1, { message: 'Patient Name is required' }),
   imgUrl: z
     .array(ImgSchema)
     .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
@@ -84,8 +83,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({
   const defaultValues = initialData
     ? initialData
     : {
-        firstName: '',
-        lastName: '',
+        name: '',
         description: '',
         gender: '',
         phone: '',
@@ -185,35 +183,17 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({
             )}
           />
           <div className="gap-8 md:grid md:grid-cols-3">
-            {/* first name */}
+            {/* name */}
             <FormField
               control={form.control}
-              name="firstName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Patient's First name"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* last name */}
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Patient's Last name"
+                      placeholder="Patient name"
                       {...field}
                     />
                   </FormControl>
