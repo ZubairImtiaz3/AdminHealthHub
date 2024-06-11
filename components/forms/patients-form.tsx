@@ -43,26 +43,30 @@ export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
   name: z
     .string()
-    .min(3, { message: 'Product Name must be at least 3 characters' }),
+    .min(2, { message: 'Patient Name must be at least 2 characters' }),
   imgUrl: z
     .array(ImgSchema)
     .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
     .min(1, { message: 'At least one image must be added.' }),
-  description: z
+  gender: z.string().min(3, { message: 'Patient Gender must be selected' }),
+  phone: z
     .string()
-    .min(3, { message: 'Product description must be at least 3 characters' }),
-  price: z.coerce.number(),
-  category: z.string().min(1, { message: 'Please select a category' })
+    .min(1, { message: 'Patient Phone Number must be provided' })
+    .regex(/^\d+$/, { message: 'Patient Phone Number must be a number' }),
+  emailAddress: z
+    .string()
+    .min(1, { message: 'Patient Email Address must be provided' })
+    .email({ message: 'Invalid email format' })
 });
 
-type ProductFormValues = z.infer<typeof formSchema>;
+type PatientsFormValues = z.infer<typeof formSchema>;
 
-interface ProductFormProps {
+interface PatientsFormProps {
   initialData: any | null;
   categories: any;
 }
 
-export const ProductForm: React.FC<ProductFormProps> = ({
+export const PatientsForm: React.FC<PatientsFormProps> = ({
   initialData,
   categories
 }) => {
@@ -72,9 +76,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
-  const title = initialData ? 'Edit product' : 'Create product';
-  const description = initialData ? 'Edit a product.' : 'Add a new product';
-  const toastMessage = initialData ? 'Product updated.' : 'Product created.';
+  const title = initialData ? 'Edit patient' : 'Add patient';
+  const description = initialData ? 'Edit a patient.' : 'Add a new patient';
+  const toastMessage = initialData ? 'patient updated.' : 'patient created.';
   const action = initialData ? 'Save changes' : 'Create';
 
   const defaultValues = initialData
@@ -82,17 +86,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     : {
         name: '',
         description: '',
-        price: 0,
-        imgUrl: [],
-        category: ''
+        gender: '',
+        phone: '',
+        emailAddress: ''
       };
 
-  const form = useForm<ProductFormValues>({
+  const form = useForm<PatientsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues
   });
 
-  const onSubmit = async (data: ProductFormValues) => {
+  const onSubmit = async (data: PatientsFormValues) => {
     try {
       setLoading(true);
       if (initialData) {
@@ -179,6 +183,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             )}
           />
           <div className="gap-8 md:grid md:grid-cols-3">
+            {/* name */}
             <FormField
               control={form.control}
               name="name"
@@ -188,7 +193,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Product name"
+                      placeholder="Patient name"
                       {...field}
                     />
                   </FormControl>
@@ -196,42 +201,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+            {/* gender */}
             <FormField
               control={form.control}
-              name="description"
+              name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={loading}
-                      placeholder="Product description"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <Input type="number" disabled={loading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>Gender</FormLabel>
                   <Select
                     disabled={loading}
                     onValueChange={field.onChange}
@@ -240,10 +216,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select a category"
-                        />
+                        <SelectValue>
+                          {field.value || 'Select Patient Gender'}
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -255,6 +230,42 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* ph no */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient Phone Number"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* email address */}
+            <FormField
+              control={form.control}
+              name="emailAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient Email Address"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
