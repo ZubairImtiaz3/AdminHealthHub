@@ -28,7 +28,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 // import FileUpload from "@/components/FileUpload";
 import { useToast } from '../ui/use-toast';
-import { BasicUploader } from '../file-uploader/fileUploader';
 
 const ImgSchema = z.object({
   fileName: z.string(),
@@ -198,7 +197,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({
             )}
           />
           {/*  */}
-          <BasicUploader />
+
           {/*  */}
           <div className="gap-8 md:grid md:grid-cols-3">
             {/* name */}
