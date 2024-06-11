@@ -41,21 +41,8 @@ const ImgSchema = z.object({
 });
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
-  name: z.string().refine(
-    (value) => {
-      // Trim the value to remove leading and trailing spaces
-      const trimmedValue = value.trim();
-      // Split the trimmed value into parts based on spaces
-      const parts = trimmedValue.split(' ');
-      // Check if there are at least two parts
-      if (parts.length < 2) {
-        return false;
-      }
-      // Check if each trimmed part has at least one character
-      return parts.every((part) => part.trim().length > 0);
-    },
-    { message: 'Please enter both first and last name' }
-  ),
+  firstName: z.string().min(1, { message: 'Patient First Name is required' }),
+  lastName: z.string().min(1, { message: 'Patient Last Name is required' }),
   imgUrl: z
     .array(ImgSchema)
     .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
@@ -97,7 +84,8 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({
   const defaultValues = initialData
     ? initialData
     : {
-        name: '',
+        firstName: '',
+        lastName: '',
         description: '',
         gender: '',
         phone: '',
@@ -196,21 +184,36 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({
               </FormItem>
             )}
           />
-          {/*  */}
-
-          {/*  */}
           <div className="gap-8 md:grid md:grid-cols-3">
-            {/* name */}
+            {/* first name */}
             <FormField
               control={form.control}
-              name="name"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>First Name</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Patient name"
+                      placeholder="Patient's First name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* last name */}
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient's Last name"
                       {...field}
                     />
                   </FormControl>
