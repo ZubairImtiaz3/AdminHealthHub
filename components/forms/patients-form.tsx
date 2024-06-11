@@ -39,9 +39,12 @@ const ImgSchema = z.object({
 });
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Patient Name must be at least 2 characters' }),
+  firstName: z.string().min(1, { message: 'Patient First Name is required' }),
+  lastName: z.string().min(1, { message: 'Patient Last Name is required' }),
+  imgUrl: z
+    .array(ImgSchema)
+    .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
+    .min(1, { message: 'At least one image must be added.' }),
   gender: z.string().min(3, { message: 'Patient Gender must be selected' }),
   phone: z
     .string()
@@ -78,7 +81,8 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
   const defaultValues = initialData
     ? initialData
     : {
-        name: '',
+        firstName: '',
+        lastName: '',
         description: '',
         gender: '',
         phone: '',
@@ -158,17 +162,35 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
           className="w-full space-y-8"
         >
           <div className="gap-8 md:grid md:grid-cols-3">
-            {/* name */}
+            {/* first name */}
             <FormField
               control={form.control}
-              name="name"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>First Name</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Patient name"
+                      placeholder="Patient's First name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* last name */}
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient's Last name"
                       {...field}
                     />
                   </FormControl>
