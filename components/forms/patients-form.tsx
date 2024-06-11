@@ -28,6 +28,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 // import FileUpload from "@/components/FileUpload";
 import { useToast } from '../ui/use-toast';
+import { BasicUploader } from '../file-uploader/fileUploader';
 
 const ImgSchema = z.object({
   fileName: z.string(),
@@ -41,9 +42,21 @@ const ImgSchema = z.object({
 });
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Patient Name must be at least 2 characters' }),
+  name: z.string().refine(
+    (value) => {
+      // Trim the value to remove leading and trailing spaces
+      const trimmedValue = value.trim();
+      // Split the trimmed value into parts based on spaces
+      const parts = trimmedValue.split(' ');
+      // Check if there are at least two parts
+      if (parts.length < 2) {
+        return false;
+      }
+      // Check if each trimmed part has at least one character
+      return parts.every((part) => part.trim().length > 0);
+    },
+    { message: 'Please enter both first and last name' }
+  ),
   imgUrl: z
     .array(ImgSchema)
     .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
@@ -182,6 +195,9 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
               </FormItem>
             )}
           />
+          {/*  */}
+          <BasicUploader />
+          {/*  */}
           <div className="gap-8 md:grid md:grid-cols-3">
             {/* name */}
             <FormField
