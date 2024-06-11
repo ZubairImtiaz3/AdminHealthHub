@@ -1,15 +1,23 @@
 'use client';
+import * as z from 'zod';
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Trash } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
 import { Heading } from '@/components/ui/heading';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -17,14 +25,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Trash } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+import { Checkbox } from '@/components/ui/checkbox';
+// import FileUpload from "@/components/FileUpload";
 import { useToast } from '../ui/use-toast';
+import { BasicUploader } from '../file-uploader/fileUploader';
+
 const ImgSchema = z.object({
   fileName: z.string(),
   name: z.string(),
@@ -37,28 +42,45 @@ const ImgSchema = z.object({
 });
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, { message: 'Product Name must be at least 3 characters' }),
+  name: z.string().refine(
+    (value) => {
+      // Trim the value to remove leading and trailing spaces
+      const trimmedValue = value.trim();
+      // Split the trimmed value into parts based on spaces
+      const parts = trimmedValue.split(' ');
+      // Check if there are at least two parts
+      if (parts.length < 2) {
+        return false;
+      }
+      // Check if each trimmed part has at least one character
+      return parts.every((part) => part.trim().length > 0);
+    },
+    { message: 'Please enter both first and last name' }
+  ),
   imgUrl: z
     .array(ImgSchema)
     .max(IMG_MAX_LIMIT, { message: 'You can only add up to 3 images' })
     .min(1, { message: 'At least one image must be added.' }),
-  description: z
+  gender: z.string().min(3, { message: 'Patient Gender must be selected' }),
+  phone: z
     .string()
-    .min(3, { message: 'Product description must be at least 3 characters' }),
-  price: z.coerce.number(),
-  category: z.string().min(1, { message: 'Please select a category' })
+    .min(1, { message: 'Patient Phone Number must be provided' })
+    .regex(/^\d+$/, { message: 'Patient Phone Number must be a number' }),
+  emailAddress: z
+    .string()
+    .min(1, { message: 'Patient Email Address must be provided' })
+    .email({ message: 'Invalid email format' }),
+  title: z.string().min(1, { message: 'Report Title must be a provided' })
 });
 
-type ProductFormValues = z.infer<typeof formSchema>;
+type PatientsFormValues = z.infer<typeof formSchema>;
 
-interface ProductFormProps {
+interface PatientsFormProps {
   initialData: any | null;
   categories: any;
 }
 
-export const EmployeeForm: React.FC<ProductFormProps> = ({
+export const ReportsForm: React.FC<PatientsFormProps> = ({
   initialData,
   categories
 }) => {
@@ -67,9 +89,10 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const title = initialData ? 'Edit product' : 'Create product';
-  const description = initialData ? 'Edit a product.' : 'Add a new product';
-  const toastMessage = initialData ? 'Product updated.' : 'Product created.';
+  const [imgLoading, setImgLoading] = useState(false);
+  const title = initialData ? 'Edit report' : 'Add report';
+  const description = initialData ? 'Edit a report.' : 'Add a new report';
+  const toastMessage = initialData ? 'report updated.' : 'report created.';
   const action = initialData ? 'Save changes' : 'Create';
 
   const defaultValues = initialData
@@ -77,17 +100,18 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
     : {
         name: '',
         description: '',
-        price: 0,
-        imgUrl: [],
-        category: ''
+        gender: '',
+        phone: '',
+        emailAddress: '',
+        title: ''
       };
 
-  const form = useForm<ProductFormValues>({
+  const form = useForm<PatientsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues
   });
 
-  const onSubmit = async (data: ProductFormValues) => {
+  const onSubmit = async (data: PatientsFormValues) => {
     try {
       setLoading(true);
       if (initialData) {
@@ -173,7 +197,11 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
               </FormItem>
             )}
           />
+          {/*  */}
+          <BasicUploader />
+          {/*  */}
           <div className="gap-8 md:grid md:grid-cols-3">
+            {/* name */}
             <FormField
               control={form.control}
               name="name"
@@ -183,7 +211,7 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Product name"
+                      placeholder="Patient name"
                       {...field}
                     />
                   </FormControl>
@@ -191,16 +219,17 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+            {/* title */}
             <FormField
               control={form.control}
-              name="description"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
-                      placeholder="Product description"
+                      placeholder="Report title"
                       {...field}
                     />
                   </FormControl>
@@ -208,25 +237,13 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+            {/* gender */}
             <FormField
               control={form.control}
-              name="price"
+              name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <Input type="number" disabled={loading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>Gender</FormLabel>
                   <Select
                     disabled={loading}
                     onValueChange={field.onChange}
@@ -235,10 +252,9 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select a category"
-                        />
+                        <SelectValue>
+                          {field.value || 'Select Patient Gender'}
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -250,6 +266,42 @@ export const EmployeeForm: React.FC<ProductFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* ph no */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient Phone Number"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* email address */}
+            <FormField
+              control={form.control}
+              name="emailAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="Patient Email Address"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
