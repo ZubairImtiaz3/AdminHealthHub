@@ -10,10 +10,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { toast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
@@ -23,6 +25,9 @@ const formSchema = z.object({
 type UserFormValue = z.infer<typeof formSchema>;
 
 export default function UserAuthForm() {
+  const supabase = createClient();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const defaultValues = {
     email: '',
@@ -34,7 +39,26 @@ export default function UserAuthForm() {
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    //  logic for signIn
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data?.email,
+      password: data?.password
+    });
+
+    if (!error) {
+      toast({
+        title: 'Login Successfully.',
+        description: 'Redirecting to your Dashboard'
+      });
+      router.push('/dashboard');
+    } else {
+      toast({
+        title: 'Something Went Wrong.',
+        description: error.message
+      });
+    }
+    setLoading(false);
   };
 
   return (
