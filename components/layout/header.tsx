@@ -2,16 +2,22 @@ import { cn } from '@/lib/utils';
 import { MobileSidebar } from './mobile-sidebar';
 import { UserNav } from './user-nav';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
-export default function Header() {
+export default async function Header() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: profiles } = await supabase.from('profiles').select('*');
+
+  const profile = profiles ? profiles[0] : null;
+
   return (
     <div className="supports-backdrop-blur:bg-background/60 fixed left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
       <nav className="flex h-14 items-center justify-between px-4">
         <div className="hidden lg:block">
-          <Link
-            href={'https://github.com/Kiranism/next-shadcn-dashboard-starter'}
-            target="_blank"
-          >
+          <Link href={'https://admin-health-hub.vercel.app/'}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -31,7 +37,7 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <UserNav />
+          <UserNav userProfile={profile} />
         </div>
       </nav>
     </div>

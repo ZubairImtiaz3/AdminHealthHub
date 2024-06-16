@@ -60,5 +60,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
+  if (request.nextUrl.pathname.endsWith('/') && user.error === null) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
   return response
 }
