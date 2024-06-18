@@ -16,6 +16,7 @@ import * as z from 'zod';
 import { toast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import signOut from '@/actions/signOut';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Enter a valid email address' }),
@@ -41,21 +42,31 @@ export default function UserAuthForm() {
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: user, error } = await supabase.auth.signInWithPassword({
       email: data?.email,
       password: data?.password
     });
 
-    if (!error) {
+    const { data: role } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.user?.id)
+      .single();
+
+    if (!error && role?.role === 'admin') {
       toast({
         title: 'Login Successfully.',
         description: 'Redirecting to your Dashboard'
       });
       router.push('/dashboard');
     } else {
+      await signOut(); // Removing cookies to protect dashboard.
       toast({
         title: 'Something Went Wrong.',
-        description: error.message
+        description:
+          role?.role === 'user'
+            ? 'You do not have the necessary permissions to access this resource.'
+            : error?.message
       });
     }
     setLoading(false);
