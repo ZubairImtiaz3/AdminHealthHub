@@ -27,6 +27,7 @@ import {
 import { useToast } from '../ui/use-toast';
 import { createClient } from '@/utils/supabase/client';
 import { Icons } from '@/components/icons';
+import { AlertModal } from '../modal/alert-modal';
 
 const formSchema = z.object({
   first_name: z.string().min(1, { message: 'Patient First Name is required' }),
@@ -145,6 +146,7 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
           title: 'Success.',
           description: 'Patient updated successfully.'
         });
+        router.refresh();
       } else {
         const { data: profile } = await supabase
           .from('profiles')
@@ -172,6 +174,7 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
         }
       }
       router.push(`/dashboard/patients`);
+      router.refresh();
       toast({
         title: 'Success.',
         description: `${toastMessage} successfully.`
@@ -190,8 +193,23 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      //   await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+      const { error } = await supabase
+        .from('patients')
+        .delete()
+        .eq('id', params.patientsId);
+
+      router.push(`/dashboard/patients`);
+      router.refresh();
+      toast({
+        title: 'Success',
+        description: 'Patient record successfully deleted.'
+      });
     } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.'
+      });
     } finally {
       setLoading(false);
       setOpen(false);
@@ -208,12 +226,12 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
 
   return (
     <>
-      {/* <AlertModal
+      <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
-      /> */}
+      />
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
         {initialData && (
