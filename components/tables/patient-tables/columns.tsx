@@ -25,7 +25,7 @@ export const columns: ColumnDef<Patient>[] = [
     enableHiding: false
   },
   {
-    accessorKey: 'name',
+    accessorFn: (row) => `${row.first_name} ${row.last_name}`,
     header: 'NAME'
   },
   {
@@ -33,12 +33,12 @@ export const columns: ColumnDef<Patient>[] = [
     header: 'GENDER'
   },
   {
-    accessorKey: 'phone',
+    accessorKey: 'phone_number',
     header: 'PHONE NUMBER'
   },
   {
-    accessorKey: 'email',
-    header: 'EMAIL ADDRESS'
+    accessorKey: 'associated_patients',
+    header: 'Associated Patients'
   },
   {
     id: 'actions',
