@@ -17,7 +17,6 @@ export default function Page() {
             { _id: 'Male', name: 'Male' },
             { _id: 'Female', name: 'Female' }
           ]}
-          initialData={null}
           key={null}
         />
       </div>

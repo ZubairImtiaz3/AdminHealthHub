@@ -1,6 +1,6 @@
 'use client';
 import * as z from 'zod';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Trash } from 'lucide-react';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '../ui/use-toast';
 import { createClient } from '@/utils/supabase/client';
+import { Icons } from '@/components/icons';
 
 const formSchema = z.object({
   first_name: z.string().min(1, { message: 'Patient First Name is required' }),
@@ -40,47 +41,110 @@ const formSchema = z.object({
 type PatientsFormValues = z.infer<typeof formSchema>;
 
 interface PatientsFormProps {
-  initialData: any | null;
   categories: any;
 }
 
-export const PatientsForm: React.FC<PatientsFormProps> = ({
-  initialData,
-  categories
-}) => {
+export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
   const supabase = createClient();
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialData, setInitialData] = useState<PatientsFormValues | null>(
+    null
+  );
+  const [fetching, setFetching] = useState(true);
   const title = initialData ? 'Edit patient' : 'Add patient';
   const description = initialData ? 'Edit a patient.' : 'Add a new patient';
-  const toastMessage = initialData ? 'patient updated.' : 'patient created.';
+  const toastMessage = initialData ? 'Patient updated.' : 'Patient created.';
   const action = initialData ? 'Save changes' : 'Create';
 
-  console.log('params', params.patientsId);
+  useEffect(() => {
+    const fetchPatient = async () => {
+      if (params.patientsId && params.patientsId !== 'new') {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', params.patientsId)
+          .single();
 
-  const defaultValues = initialData
-    ? initialData
-    : {
-        firstName: '',
-        lastName: '',
-        description: '',
-        gender: '',
-        phone: ''
-      };
+        if (data) {
+          setInitialData({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            gender: data.gender,
+            phone_number: data.phone_number
+          });
+        } else if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Error fetching patient data',
+            description: error.message
+          });
+        }
+        setFetching(false);
+      } else {
+        setFetching(false);
+      }
+    };
+
+    fetchPatient();
+  }, [params.patientsId, supabase, toast]);
 
   const form = useForm<PatientsFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues
+    defaultValues: initialData ?? {
+      first_name: '',
+      last_name: '',
+      gender: '',
+      phone_number: ''
+    }
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
 
   const onSubmit = async (data: PatientsFormValues) => {
     try {
       setLoading(true);
       if (initialData) {
-        // await axios.post(`/api/products/edit-product/${initialData._id}`, data);
+        const isDataChanged =
+          JSON.stringify(data) !== JSON.stringify(initialData);
+
+        if (!isDataChanged) {
+          toast({
+            variant: 'destructive',
+            title: 'No changes detected.',
+            description: 'Please make changes before saving.'
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Updating existing patient
+        const { data: updatedData, error } = await supabase
+          .from('patients')
+          .update({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            phone_number: data.phone_number,
+            gender: data.gender
+          })
+          .match({ id: params.patientsId })
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: 'Success.',
+          description: 'Patient updated successfully.'
+        });
       } else {
         const { data: profile } = await supabase
           .from('profiles')
@@ -103,22 +167,14 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
           ])
           .select();
 
-        // const { data: associated_patients } = await supabase
-        //   .from('associated_patients')
-        //   .insert([
-        //     {
-        //       patients_id: patients ? patients[0]?.id : '',
-        //       associated_patients_id: ''
-        //     }
-        //   ])
-        //   .select();
-
-        // console.log('associated_patients', associated_patients);
+        if (error) {
+          throw error;
+        }
       }
       router.push(`/dashboard/patients`);
       toast({
         title: 'Success.',
-        description: 'Patient Added Successfully.'
+        description: `${toastMessage} successfully.`
       });
     } catch (error: any) {
       toast({
@@ -141,6 +197,14 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({
       setOpen(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Icons.spinner className="mr-2 h-7 w-7 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
