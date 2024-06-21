@@ -3,6 +3,34 @@ import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 import { Patient } from '@/constants/data';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+
+const AssociatedPatientsCell = ({
+  associatedPatients
+}: {
+  associatedPatients: Patient[];
+}) => {
+  const router = useRouter();
+
+  return (
+    <div>
+      {associatedPatients.length > 0 ? (
+        associatedPatients.map((patient: Patient) => (
+          <Button
+            onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
+            variant="link"
+            key={patient.id}
+          >
+            {patient.first_name} {patient.last_name}
+          </Button>
+        ))
+      ) : (
+        <span>No Associated Patients</span>
+      )}
+    </div>
+  );
+};
 
 export const columns: ColumnDef<Patient>[] = [
   {
@@ -37,8 +65,13 @@ export const columns: ColumnDef<Patient>[] = [
     header: 'PHONE NUMBER'
   },
   {
+    header: 'Associated Patients',
     accessorKey: 'associated_patients',
-    header: 'Associated Patients'
+    cell: ({ row }) => (
+      <AssociatedPatientsCell
+        associatedPatients={row.original.associated_patients}
+      />
+    )
   },
   {
     id: 'actions',

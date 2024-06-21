@@ -6,7 +6,7 @@ export type Patient = {
   last_name: string;
   gender: string;
   phone: string;
-  associated_patients: string;
+  associated_patients: Patient[];
 };
 
 // dummy data for reports
