@@ -23,8 +23,6 @@ Using following stack:
 - Linting - [ESLint](https://eslint.org)
 - Formatting - [Prettier](https://prettier.io)
 
-_If you are looking for a React admin dashboard starter, here is the [repo](https://github.com/Kiranism/react-shadcn-dashboard-starter)._                                                                                                 |
-
 ## Getting Started
 
 Follow these steps to clone the repository and start the development server:
