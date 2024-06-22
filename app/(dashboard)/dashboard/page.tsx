@@ -1,3 +1,4 @@
+import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { Overview } from '@/components/overview';
 import { RecentSales } from '@/components/recent-sales';
 import {
@@ -8,8 +9,26 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
-export default function page() {
+export default async function page() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  // for patients
+  const { data: patientsData, error } = await supabase
+    .from('patients')
+    .select('*');
+
+  const patients = patientsData ? patientsData : [];
+
+  // for reports
+  const { data: reportsData } = await supabase.from('reports').select('*');
+
+  const reports = reportsData ? reportsData : [];
+  console.log('reports', reports);
+
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -17,6 +36,9 @@ export default function page() {
           <h2 className="text-3xl font-bold tracking-tight">
             Hi, Welcome back 👋
           </h2>
+          <div>
+            <CalendarDateRangePicker patients={patients} reports={reports} />
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -40,9 +62,9 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
+              <div className="text-2xl font-bold">{patients.length}</div>
               <p className="text-xs text-muted-foreground">
-                +20.1% from last month
+                You have total {patients.length} number of patients.
               </p>
             </CardContent>
           </Card>
@@ -66,9 +88,9 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">235</div>
+              <div className="text-2xl font-bold">{reports.length}</div>
               <p className="text-xs text-muted-foreground">
-                +180.1% from last month
+                You have total {reports.length} number of patients.
               </p>
             </CardContent>
           </Card>
