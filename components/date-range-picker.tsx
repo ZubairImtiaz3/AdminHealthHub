@@ -6,7 +6,6 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { Patient, Report } from '@/constants/data';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from '@radix-ui/react-icons';
 import { format, startOfDay, endOfDay } from 'date-fns';
@@ -14,17 +13,9 @@ import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-interface CalendarDateRangePickerProps
-  extends React.HTMLAttributes<HTMLDivElement> {
-  patients?: Patient[];
-  reports?: Report[];
-}
-
 export function CalendarDateRangePicker({
-  className,
-  patients,
-  reports
-}: CalendarDateRangePickerProps) {
+  className
+}: React.HTMLAttributes<HTMLDivElement>) {
   // to get today's date
   const today = startOfDay(new Date());
 
@@ -32,10 +23,6 @@ export function CalendarDateRangePicker({
     from: today,
     to: today
   });
-
-  console.log('date', date);
-  console.log('patients in date component', patients);
-  console.log('reports in date component', reports);
 
   const router = useRouter();
   const pathname = usePathname();

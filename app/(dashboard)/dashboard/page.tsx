@@ -9,6 +9,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatReleaseDate } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/server';
 import { isWithinInterval, parseISO } from 'date-fns';
 import { cookies } from 'next/headers';
@@ -30,29 +31,33 @@ export default async function page({
   const { data: patientsData, error } = await supabase
     .from('patients')
     .select('*');
-
   const patients = patientsData ? patientsData : [];
 
   // for reports
   const { data: reportsData } = await supabase.from('reports').select('*');
-
   const reports = reportsData ? reportsData : [];
 
   let filteredPatients = patients;
   let filteredReports = reports;
 
+  // filtering logic according to date
   if (searchParams.from && searchParams.to) {
     const fromDate = parseISO(searchParams.from);
     const toDate = parseISO(searchParams.to);
 
     filteredPatients = patients.filter((patient) => {
-      const createdAtDate = parseISO(patient.created_at.split('T')[0]);
-      return isWithinInterval(createdAtDate, { start: fromDate, end: toDate });
+      const createdAtDate = formatReleaseDate(
+        patient?.created_at,
+        'YYYY-MM-DD'
+      );
+      const patientsDate = parseISO(createdAtDate);
+      return isWithinInterval(patientsDate, { start: fromDate, end: toDate });
     });
 
     filteredReports = reports.filter((report) => {
-      const createdAtDate = parseISO(report.created_at.split('T')[0]);
-      return isWithinInterval(createdAtDate, { start: fromDate, end: toDate });
+      const createdAtDate = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
+      const reportsDate = parseISO(createdAtDate);
+      return isWithinInterval(reportsDate, { start: fromDate, end: toDate });
     });
   }
 
@@ -64,7 +69,7 @@ export default async function page({
             Hi, Welcome back 👋
           </h2>
           <div>
-            <CalendarDateRangePicker patients={patients} reports={reports} />
+            <CalendarDateRangePicker />
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
