@@ -1,6 +1,6 @@
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { Overview } from '@/components/overview';
-import { RecentSales } from '@/components/recent-sales';
+import { RecentPatients } from '@/components/recent-patients';
 import {
   Card,
   CardContent,
@@ -9,6 +9,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Report } from '@/constants/data';
 import { formatReleaseDate } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/server';
 import { isWithinInterval, parseISO } from 'date-fns';
@@ -36,6 +37,20 @@ export default async function page({
   // for reports
   const { data: reportsData } = await supabase.from('reports').select('*');
   const reports = reportsData ? reportsData : [];
+
+  let patientsReports: Report[] = []; // Array to store reports of a single patient
+
+  // Iterate over each patient to get their reports
+  for (const patient of patients) {
+    const { data: patientData } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('patient_id', patient.id);
+
+    if (patientData) {
+      patientsReports.push(...patientData);
+    }
+  }
 
   let filteredPatients = patients;
   let filteredReports = reports;
@@ -195,13 +210,16 @@ export default async function page({
           </Card>
           <Card className="col-span-4 md:col-span-3">
             <CardHeader>
-              <CardTitle>Recent Reports</CardTitle>
+              <CardTitle>Recent Patients</CardTitle>
               <CardDescription>
-                You have added 265 new reports this month.
+                You have added {patients.length} patients.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentSales />
+              <RecentPatients
+                patients={patients}
+                patientsReports={patientsReports ? patientsReports : []}
+              />
             </CardContent>
           </Card>
         </div>

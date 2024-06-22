@@ -5,18 +5,21 @@ export type Patient = {
   first_name: string;
   last_name: string;
   gender: string;
-  phone: string;
+  phone_number: string;
   associated_patients?: Patient[];
   created_at: string;
 };
+
 export type Report = {
   id: string;
   patient_id: string;
   admin_id: string;
   user_id: string;
+  last_name: string;
   report_description: string;
   report_link: string;
   report_title: string;
+  associated_patients?: Patient[];
   created_at: string;
 };
 
