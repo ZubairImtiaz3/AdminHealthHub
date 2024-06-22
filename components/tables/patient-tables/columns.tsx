@@ -69,7 +69,7 @@ export const columns: ColumnDef<Patient>[] = [
     accessorKey: 'associated_patients',
     cell: ({ row }) => (
       <AssociatedPatientsCell
-        associatedPatients={row.original.associated_patients}
+        associatedPatients={row.original.associated_patients ?? []}
       />
     )
   },

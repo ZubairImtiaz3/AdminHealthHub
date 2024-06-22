@@ -90,7 +90,7 @@ export default async function page() {
             <CardContent>
               <div className="text-2xl font-bold">{reports.length}</div>
               <p className="text-xs text-muted-foreground">
-                You have total {reports.length} number of patients.
+                You have total {reports.length} number of reports.
               </p>
             </CardContent>
           </Card>

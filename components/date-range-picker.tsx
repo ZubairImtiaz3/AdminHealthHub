@@ -34,16 +34,25 @@ export function CalendarDateRangePicker({
 
   console.log('date', date);
   console.log('patients in date component', patients);
+  console.log('reports in date component', reports);
 
   React.useEffect(() => {
-    if (patients && date?.from && date?.to) {
+    if (patients && reports && date?.from && date?.to) {
       const fromDate = startOfDay(new Date(date.from));
       const toDate = endOfDay(new Date(date.to));
 
+      // Filter patients
       const filteredPatients = patients.filter((patient) => {
-        // Remove timezone and convert to Date object
         const createdAtDate = new Date(patient.created_at.split('T')[0]);
+        return isWithinInterval(createdAtDate, {
+          start: fromDate,
+          end: toDate
+        });
+      });
 
+      // Filter reports
+      const filteredReports = reports.filter((report) => {
+        const createdAtDate = new Date(report.created_at.split('T')[0]);
         return isWithinInterval(createdAtDate, {
           start: fromDate,
           end: toDate
@@ -51,8 +60,9 @@ export function CalendarDateRangePicker({
       });
 
       console.log('filtered patients', filteredPatients);
+      console.log('filtered reports', filteredReports);
     }
-  }, [date, patients]);
+  }, [date, patients, reports]);
 
   return (
     <>

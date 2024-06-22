@@ -4,7 +4,7 @@ import { ReportsTable } from '@/components/tables/reports-tables/reports-table';
 import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { reports } from '@/constants/data';
+// import { reports } from '@/constants/data';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -26,14 +26,14 @@ export default async function page({ searchParams }: paramsProps) {
     ? searchParams.search[0]
     : searchParams.search || null;
 
-  const filteredReports = name
-    ? reports.filter((report) =>
-        report.name.toLowerCase().includes(name.toLowerCase())
-      )
-    : reports;
+  //   const filteredReports = name
+  //     ? reports.filter((report) =>
+  //         report.name.toLowerCase().includes(name.toLowerCase())
+  //       )
+  //     : reports;
 
-  const totalUsers = filteredReports.length;
-  const pageCount = Math.ceil(totalUsers / pageLimit);
+  //   const totalUsers = filteredReports.length;
+  //   const pageCount = Math.ceil(totalUsers / pageLimit);
 
   return (
     <>
@@ -41,10 +41,10 @@ export default async function page({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading
+          {/* <Heading
             title={`Reports (${totalUsers})`}
             description="Manage reports"
-          />
+          /> */}
 
           <Link
             href={'/dashboard/reports/new'}
@@ -55,14 +55,14 @@ export default async function page({ searchParams }: paramsProps) {
         </div>
         <Separator />
 
-        <ReportsTable
+        {/* <ReportsTable
           searchKey="name"
           pageNo={page}
           columns={columns}
           totalUsers={totalUsers}
           data={filteredReports}
           pageCount={pageCount}
-        />
+        /> */}
       </div>
     </>
   );
