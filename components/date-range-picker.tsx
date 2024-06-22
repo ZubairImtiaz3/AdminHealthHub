@@ -9,9 +9,10 @@ import {
 import { Patient, Report } from '@/constants/data';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 interface CalendarDateRangePickerProps
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -36,33 +37,22 @@ export function CalendarDateRangePicker({
   console.log('patients in date component', patients);
   console.log('reports in date component', reports);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   React.useEffect(() => {
-    if (patients && reports && date?.from && date?.to) {
-      const fromDate = startOfDay(new Date(date.from));
-      const toDate = endOfDay(new Date(date.to));
+    if (date?.from && date?.to) {
+      const fromDate = format(startOfDay(date.from), 'yyyy-MM-dd');
+      const toDate = format(endOfDay(date.to), 'yyyy-MM-dd');
 
-      // Filter patients
-      const filteredPatients = patients.filter((patient) => {
-        const createdAtDate = new Date(patient.created_at.split('T')[0]);
-        return isWithinInterval(createdAtDate, {
-          start: fromDate,
-          end: toDate
-        });
-      });
+      const updatedSearchParams = new URLSearchParams(searchParams.toString());
+      updatedSearchParams.set('from', fromDate);
+      updatedSearchParams.set('to', toDate);
 
-      // Filter reports
-      const filteredReports = reports.filter((report) => {
-        const createdAtDate = new Date(report.created_at.split('T')[0]);
-        return isWithinInterval(createdAtDate, {
-          start: fromDate,
-          end: toDate
-        });
-      });
-
-      console.log('filtered patients', filteredPatients);
-      console.log('filtered reports', filteredReports);
+      router.replace(`${pathname}?${updatedSearchParams.toString()}`);
     }
-  }, [date, patients, reports]);
+  }, [date, router, pathname, searchParams]);
 
   return (
     <>

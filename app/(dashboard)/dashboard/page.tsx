@@ -10,9 +10,19 @@ import {
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { createClient } from '@/utils/supabase/server';
+import { isWithinInterval, parseISO } from 'date-fns';
 import { cookies } from 'next/headers';
 
-export default async function page() {
+interface SearchParams {
+  from?: string;
+  to?: string;
+}
+
+export default async function page({
+  searchParams
+}: {
+  searchParams: SearchParams;
+}) {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
@@ -27,7 +37,24 @@ export default async function page() {
   const { data: reportsData } = await supabase.from('reports').select('*');
 
   const reports = reportsData ? reportsData : [];
-  console.log('reports', reports);
+
+  let filteredPatients = patients;
+  let filteredReports = reports;
+
+  if (searchParams.from && searchParams.to) {
+    const fromDate = parseISO(searchParams.from);
+    const toDate = parseISO(searchParams.to);
+
+    filteredPatients = patients.filter((patient) => {
+      const createdAtDate = parseISO(patient.created_at.split('T')[0]);
+      return isWithinInterval(createdAtDate, { start: fromDate, end: toDate });
+    });
+
+    filteredReports = reports.filter((report) => {
+      const createdAtDate = parseISO(report.created_at.split('T')[0]);
+      return isWithinInterval(createdAtDate, { start: fromDate, end: toDate });
+    });
+  }
 
   return (
     <ScrollArea className="h-full">
@@ -62,9 +89,11 @@ export default async function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{patients.length}</div>
+              <div className="text-2xl font-bold">
+                {filteredPatients.length}
+              </div>
               <p className="text-xs text-muted-foreground">
-                You have total {patients.length} number of patients.
+                You have total {filteredPatients.length} number of patients.
               </p>
             </CardContent>
           </Card>
@@ -88,9 +117,9 @@ export default async function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{reports.length}</div>
+              <div className="text-2xl font-bold">{filteredReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                You have total {reports.length} number of reports.
+                You have total {filteredReports.length} number of reports.
               </p>
             </CardContent>
           </Card>
