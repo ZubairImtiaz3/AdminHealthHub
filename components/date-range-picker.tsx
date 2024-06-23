@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { format, startOfDay, endOfDay } from 'date-fns';
+import {
+  format,
+  startOfDay,
+  endOfDay,
+  startOfMonth,
+  endOfMonth
+} from 'date-fns';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -16,12 +22,12 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 export function CalendarDateRangePicker({
   className
 }: React.HTMLAttributes<HTMLDivElement>) {
-  // to get today's date
+  // to get the today's date
   const today = startOfDay(new Date());
-
+  // to get the current month
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: today,
-    to: today
+    from: startOfMonth(today),
+    to: endOfMonth(today)
   });
 
   const router = useRouter();
