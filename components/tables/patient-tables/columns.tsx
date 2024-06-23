@@ -18,6 +18,7 @@ const AssociatedPatientsCell = ({
       {associatedPatients.length > 0 ? (
         associatedPatients.map((patient: Patient) => (
           <Button
+            className="px-0 pr-4"
             onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
             variant="link"
             key={patient.id}

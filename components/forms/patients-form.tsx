@@ -105,7 +105,6 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
 
   useEffect(() => {
     if (initialData) {
-      console.log('initial data', initialData);
       form.reset(initialData);
     }
   }, [initialData, form]);

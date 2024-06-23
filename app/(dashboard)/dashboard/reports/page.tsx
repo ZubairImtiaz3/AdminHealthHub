@@ -3,7 +3,7 @@ import { columns } from '@/components/tables/reports-tables/columns';
 import { ReportsTable } from '@/components/tables/reports-tables/reports-table';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { reports } from '@/constants/data';
+// import { reports } from '@/constants/data';
 
 const breadcrumbItems = [{ title: 'Reports', link: '/dashboard/reports' }];
 
@@ -14,22 +14,22 @@ type paramsProps = {
 };
 
 export default async function page({ searchParams }: paramsProps) {
-  const page = Number(searchParams.page) || 1;
-  const pageLimit = Number(searchParams.limit) || 10;
+//   const page = Number(searchParams.page) || 1;
+//   const pageLimit = Number(searchParams.limit) || 10;
 
-  // search functionality
-  const name = Array.isArray(searchParams.search)
-    ? searchParams.search[0]
-    : searchParams.search || null;
+//   // search functionality
+//   const name = Array.isArray(searchParams.search)
+//     ? searchParams.search[0]
+//     : searchParams.search || null;
 
-  const filteredReports = name
-    ? reports.filter((report) =>
-        report.name.toLowerCase().includes(name.toLowerCase())
-      )
-    : reports;
+//   const filteredReports = name
+//     ? reports.filter((report) =>
+//         report.name.toLowerCase().includes(name.toLowerCase())
+//       )
+//     : reports;
 
-  const totalUsers = filteredReports.length;
-  const pageCount = Math.ceil(totalUsers / pageLimit);
+//   const totalUsers = filteredReports.length;
+//   const pageCount = Math.ceil(totalUsers / pageLimit);
 
   return (
     <>
@@ -37,21 +37,21 @@ export default async function page({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading
+          {/* <Heading
             title={`Reports (${totalUsers})`}
             description="Manage reports"
-          />
+          /> */}
         </div>
         <Separator />
 
-        <ReportsTable
+        {/* <ReportsTable
           searchKey="name"
           pageNo={page}
           columns={columns}
           totalUsers={totalUsers}
           data={filteredReports}
           pageCount={pageCount}
-        />
+        /> */}
       </div>
     </>
   );
