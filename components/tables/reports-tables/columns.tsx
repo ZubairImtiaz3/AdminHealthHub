@@ -3,7 +3,23 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Report } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
-import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+const ReportLinkCell = ({ reportLink }: { reportLink: string }) => {
+  const handleClick = () => {
+    const url =
+      reportLink.startsWith('http://') || reportLink.startsWith('https://')
+        ? reportLink
+        : `https://${reportLink}`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <Button className="px-0" onClick={handleClick} variant="link">
+      View Report
+    </Button>
+  );
+};
 
 export const columns: ColumnDef<Report>[] = [
   {
@@ -46,16 +62,8 @@ export const columns: ColumnDef<Report>[] = [
   },
   {
     accessorKey: 'report_link',
-    header: 'REPORT',
-    cell: ({ row }) => (
-      <a
-        href={`//${row.original.report_link}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {row.original.report_link}
-      </a>
-    )
+    header: 'Report',
+    cell: ({ row }) => <ReportLinkCell reportLink={row.original.report_link} />
   },
 
   {
