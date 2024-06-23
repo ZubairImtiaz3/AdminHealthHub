@@ -25,24 +25,27 @@ export const columns: ColumnDef<Report>[] = [
     enableHiding: false
   },
   {
-    accessorKey: 'name',
-    header: 'NAME'
+    header: 'PATIENT NAME',
+    cell: ({ row }) => {
+      const patient = row.original.patient as
+        | { first_name: string; last_name: string }
+        | undefined;
+      return patient
+        ? `${patient.first_name} ${patient.last_name}`
+        : 'Unknown Patient';
+    }
   },
   {
-    accessorKey: 'title',
-    header: 'TITLE'
+    accessorKey: 'report_title',
+    header: 'REPORT TITLE'
   },
   {
-    accessorKey: 'gender',
-    header: 'GENDER'
+    accessorKey: 'report_description',
+    header: 'REPORT DESCRIPTION'
   },
   {
-    accessorKey: 'email',
-    header: 'EMAIL'
-  },
-  {
-    accessorKey: 'phone',
-    header: 'PHONE NUMBER'
+    accessorKey: 'report_link',
+    header: 'VIEW REPORT'
   },
 
   {

@@ -4,10 +4,11 @@ import { ReportsTable } from '@/components/tables/reports-tables/reports-table';
 import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-// import { reports } from '@/constants/data';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
 
 const breadcrumbItems = [{ title: 'Reports', link: '/dashboard/reports' }];
 
@@ -18,22 +19,41 @@ type paramsProps = {
 };
 
 export default async function page({ searchParams }: paramsProps) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  // fetch reports
+  const { data: reportsData } = await supabase.from('reports').select('*');
+  const reports = reportsData ? reportsData : [];
+
+  // fetch patient data for each report
+  const reportsWithPatientData = await Promise.all(
+    reports.map(async (report) => {
+      const { data: patientData } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', report.patient_id)
+        .single();
+      return { ...report, patient: patientData };
+    })
+  );
+
   const page = Number(searchParams.page) || 1;
   const pageLimit = Number(searchParams.limit) || 10;
 
   // search functionality
-  const name = Array.isArray(searchParams.search)
+  const report_title = Array.isArray(searchParams.search)
     ? searchParams.search[0]
     : searchParams.search || null;
 
-  //   const filteredReports = name
-  //     ? reports.filter((report) =>
-  //         report.name.toLowerCase().includes(name.toLowerCase())
-  //       )
-  //     : reports;
+  const filteredReports = report_title
+    ? reportsWithPatientData.filter((report) =>
+        report.report_title.toLowerCase().includes(report_title.toLowerCase())
+      )
+    : reports;
 
-  //   const totalUsers = filteredReports.length;
-  //   const pageCount = Math.ceil(totalUsers / pageLimit);
+  const totalUsers = filteredReports.length;
+  const pageCount = Math.ceil(totalUsers / pageLimit);
 
   return (
     <>
@@ -41,10 +61,10 @@ export default async function page({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          {/* <Heading
+          <Heading
             title={`Reports (${totalUsers})`}
             description="Manage reports"
-          /> */}
+          />
 
           <Link
             href={'/dashboard/reports/new'}
@@ -55,14 +75,14 @@ export default async function page({ searchParams }: paramsProps) {
         </div>
         <Separator />
 
-        {/* <ReportsTable
-          searchKey="name"
+        <ReportsTable
+          searchKey="report_title"
           pageNo={page}
           columns={columns}
           totalUsers={totalUsers}
           data={filteredReports}
           pageCount={pageCount}
-        /> */}
+        />
       </div>
     </>
   );
