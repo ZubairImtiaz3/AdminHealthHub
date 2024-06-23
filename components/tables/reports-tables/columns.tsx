@@ -3,6 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Report } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
+import Link from 'next/link';
 
 export const columns: ColumnDef<Report>[] = [
   {
@@ -45,7 +46,16 @@ export const columns: ColumnDef<Report>[] = [
   },
   {
     accessorKey: 'report_link',
-    header: 'VIEW REPORT'
+    header: 'REPORT',
+    cell: ({ row }) => (
+      <a
+        href={`//${row.original.report_link}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {row.original.report_link}
+      </a>
+    )
   },
 
   {

@@ -47,10 +47,12 @@ export default async function page({ searchParams }: paramsProps) {
     : searchParams.search || null;
 
   const filteredReports = report_title
-    ? reportsWithPatientData.filter((report) =>
-        report.report_title.toLowerCase().includes(report_title.toLowerCase())
+    ? reportsWithPatientData.filter((reportsWithPatientData) =>
+        reportsWithPatientData.report_title
+          .toLowerCase()
+          .includes(report_title.toLowerCase())
       )
-    : reports;
+    : reportsWithPatientData;
 
   const totalUsers = filteredReports.length;
   const pageCount = Math.ceil(totalUsers / pageLimit);
