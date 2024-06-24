@@ -1,9 +1,9 @@
 import BreadCrumb from '@/components/breadcrumb';
 import { columns } from '@/components/tables/reports-tables/columns';
 import { ReportsTable } from '@/components/tables/reports-tables/reports-table';
-import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
+
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ type paramsProps = {
 };
 
 export default async function page({ searchParams }: paramsProps) {
+
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
@@ -54,8 +55,8 @@ export default async function page({ searchParams }: paramsProps) {
       )
     : reportsWithPatientData;
 
-  const totalUsers = filteredReports.length;
-  const pageCount = Math.ceil(totalUsers / pageLimit);
+//   const totalUsers = filteredReports.length;
+//   const pageCount = Math.ceil(totalUsers / pageLimit);
 
   return (
     <>
@@ -63,19 +64,13 @@ export default async function page({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading
+          {/* <Heading
             title={`Reports (${totalUsers})`}
             description="Manage reports"
-          />
-
-          <Link
-            href={'/dashboard/reports/new'}
-            className={cn(buttonVariants({ variant: 'default' }))}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add New
-          </Link>
+          /> */}
         </div>
         <Separator />
+
 
         <ReportsTable
           searchKey="report_title"
@@ -84,7 +79,7 @@ export default async function page({ searchParams }: paramsProps) {
           totalUsers={totalUsers}
           data={filteredReports}
           pageCount={pageCount}
-        />
+        /> */}
       </div>
     </>
   );

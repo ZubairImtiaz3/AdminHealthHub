@@ -8,9 +8,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/use-toast';
 import { Report } from '@/constants/data';
+import { createClient } from '@/utils/supabase/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface CellActionProps {
@@ -18,11 +20,37 @@ interface CellActionProps {
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {
+    try {
+      setLoading(true);
+
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', data.id);
+
+      toast({
+        title: 'Success',
+        description: 'Patient Report successfully deleted.'
+      });
+
+      router.refresh();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.'
+      });
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
 
   return (
     <>

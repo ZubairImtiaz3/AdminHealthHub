@@ -3,7 +3,7 @@ import * as z from 'zod';
 import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Trash } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -234,16 +234,29 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
       />
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
-        {initialData && (
+        <div className="space-x-4">
           <Button
+            className="gap-1"
             disabled={loading}
-            variant="destructive"
-            size="sm"
-            onClick={() => setOpen(true)}
+            onClick={() =>
+              router.push(`/dashboard/reports/new?id=${params.patientsId}`)
+            }
           >
-            <Trash className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
+            Add Report
           </Button>
-        )}
+
+          {initialData && (
+            <Button
+              disabled={loading}
+              variant="destructive"
+              size="sm"
+              onClick={() => setOpen(true)}
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       <Separator />
       <Form {...form}>
