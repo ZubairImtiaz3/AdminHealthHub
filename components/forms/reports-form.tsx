@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { Trash } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,9 @@ import { Heading } from '@/components/ui/heading';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertModal } from '@/components/modal/alert-modal';
 import ReportUploader from '@/components/file-uploader';
+import { createClient } from '@/utils/supabase/client';
+import { PDFDocument } from 'pdf-lib';
+import { useSearchParams } from 'next/navigation';
 
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
@@ -37,7 +40,8 @@ interface PatientsFormProps {
 }
 
 export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
-  const params = useParams();
+  const supabase = createClient();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -50,7 +54,6 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
   const defaultValues = initialData
     ? initialData
     : {
-        name: '',
         description: '',
         title: '',
         files: []
@@ -60,6 +63,8 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues
   });
+
+  const patientId = searchParams.get('id');
 
   const onSubmit = async (data: PatientsFormValues) => {
     if (data.files.length === 0) {
@@ -72,19 +77,100 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
 
     try {
       setLoading(true);
-      if (initialData) {
-        // await axios.post(`/api/products/edit-product/${initialData._id}`, data);
-      } else {
-        // const res = await axios.post(`/api/products/create-product`, data);
-        // console.log("product", res);
+
+      const { data: patientData, error } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', patientId);
+
+      let fileLink;
+      const patient = patientData ? patientData : [];
+
+      // Convert images to a single PDF
+      const pdfDoc = await PDFDocument.create();
+
+      for (const file of data.files) {
+        const imgBuffer = await file.arrayBuffer();
+
+        try {
+          let img;
+          if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+            img = await pdfDoc.embedJpg(imgBuffer);
+          } else if (file.type === 'image/png') {
+            img = await pdfDoc.embedPng(imgBuffer);
+          } else {
+            throw new Error(`Unsupported file type: ${file.type}`);
+          }
+
+          const page = pdfDoc.addPage([img.width, img.height]);
+          page.drawImage(img, {
+            x: 0,
+            y: 0,
+            width: img.width,
+            height: img.height
+          });
+        } catch (embedError) {
+          console.error(
+            `Error embedding image for file: ${file.name}`,
+            embedError
+          );
+          throw embedError;
+        }
       }
-      // router.refresh();
-      // router.push(`/dashboard/products`);
+
+      const pdfBytes = await pdfDoc.save();
+      const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+      const pdfFileName = `${patient[0].first_name}_${patient[0].last_name}_${currentDateTime}.pdf`;
+      const pdfFile = new File([pdfBlob], pdfFileName, {
+        type: 'application/pdf'
+      });
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('reports')
+        .upload(`public/${pdfFile.name}`, pdfFile);
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        throw uploadError;
+      }
+
+      const {
+        data: { publicUrl }
+      } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+      fileLink = publicUrl;
+
+      if (initialData) {
+        // Update existing report logic
+      } else {
+        const { data: reportData, error: reportError } = await supabase
+          .from('reports')
+          .insert([
+            {
+              user_id: patient[0].user_id,
+              patient_id: patientId,
+              report_title: data.title,
+              report_description: data.description,
+              report_link: fileLink
+            }
+          ])
+          .select();
+
+        if (reportError) {
+          console.error('Error inserting report:', reportError);
+          throw reportError;
+        }
+      }
+
       toast({
-        title: toastMessage,
+        title: 'Success',
         description: 'Your report has been successfully submitted.'
       });
+      router.refresh();
+      router.push(`/dashboard/patients/${patientId}`);
     } catch (error: any) {
+      console.error('An error occurred:', error);
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
@@ -98,9 +184,9 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      //   await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+      // await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
       router.refresh();
-      router.push(`/${params.storeId}/products`);
+      // router.push(`/${params.storeId}/products`);
     } catch (error: any) {
     } finally {
       setLoading(false);

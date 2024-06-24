@@ -239,7 +239,7 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
             className="gap-1"
             disabled={loading}
             onClick={() =>
-              router.push(`/dashboard/reports/new?${params.patientsId}`)
+              router.push(`/dashboard/reports/new?id=${params.patientsId}`)
             }
           >
             <Plus className="h-4 w-4" />
