@@ -55,8 +55,8 @@ export default async function page({ searchParams }: paramsProps) {
       )
     : reportsWithPatientData;
 
-//   const totalUsers = filteredReports.length;
-//   const pageCount = Math.ceil(totalUsers / pageLimit);
+  const totalUsers = filteredReports.length;
+  const pageCount = Math.ceil(totalUsers / pageLimit);
 
   return (
     <>
@@ -64,10 +64,10 @@ export default async function page({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          {/* <Heading
+          <Heading
             title={`Reports (${totalUsers})`}
             description="Manage reports"
-          /> */}
+          />
         </div>
         <Separator />
 
