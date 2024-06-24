@@ -28,17 +28,34 @@ export default async function page({
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
+  // to get today's date in local timezone
+  const today = new Date();
+  const todayString = formatReleaseDate(
+    today.toLocaleDateString(),
+    'YYYY-MM-DD'
+  );
+
   // for patients
-  const { data: patientsData, error } = await supabase
-    .from('patients')
-    .select('*');
+  const { data: patientsData } = await supabase.from('patients').select('*');
   const patients = patientsData ? patientsData : [];
+
+  // to get today's patients in local timezone
+  const todayPatients = patients.filter((patient) => {
+    const createdAt = formatReleaseDate(patient?.created_at, 'YYYY-MM-DD');
+    return createdAt === todayString;
+  });
 
   // for reports
   const { data: reportsData } = await supabase.from('reports').select('*');
   const reports = reportsData ? reportsData : [];
 
-  let patientsReports: Report[] = []; // Array to store reports of a single patient
+  // to get today's reports in local timezone
+  const todayReports = reports.filter((report) => {
+    const createdAt = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
+    return createdAt === todayString;
+  });
+
+  let patientsReports: Report[] = [];
 
   // Iterate over each patient to get their reports
   for (const patient of patients) {
@@ -52,10 +69,10 @@ export default async function page({
     }
   }
 
+  // filtering logic according to date
   let filteredPatients = patients;
   let filteredReports = reports;
 
-  // filtering logic according to date
   if (searchParams.from && searchParams.to) {
     const fromDate = parseISO(searchParams.from);
     const toDate = parseISO(searchParams.to);
@@ -167,9 +184,9 @@ export default async function page({
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12</div>
+              <div className="text-2xl font-bold">{todayPatients.length}</div>
               <p className="text-xs text-muted-foreground">
-                +19% from yesterday
+                You have total {todayPatients.length} patients today.
               </p>
             </CardContent>
           </Card>
@@ -192,9 +209,9 @@ export default async function page({
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+18</div>
+              <div className="text-2xl font-bold">{todayReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                +11% since yesterday
+                You have total {todayReports.length} reports today.
               </p>
             </CardContent>
           </Card>
@@ -212,7 +229,7 @@ export default async function page({
             <CardHeader>
               <CardTitle>Recent Patients</CardTitle>
               <CardDescription>
-                You have added {patients.length} patients.
+                You have added these patients recently.
               </CardDescription>
             </CardHeader>
             <CardContent>
