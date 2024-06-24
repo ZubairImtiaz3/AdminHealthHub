@@ -1,12 +1,13 @@
 import { NavItem } from '@/types';
 
 export type Patient = {
-  id: number;
+  id: string;
   first_name: string;
   last_name: string;
   gender: string;
-  phone: string;
-  associated_patients: Patient[];
+  phone_number: string;
+  associated_patients?: Patient[];
+  created_at: string;
 };
 
 export type Report = {
@@ -20,6 +21,8 @@ export type Report = {
   report_title: string;
   associated_patients?: Patient[];
   created_at: string;
+  patient?: string;
+
 };
 
 export const navItems: NavItem[] = [

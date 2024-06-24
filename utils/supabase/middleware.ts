@@ -1,12 +1,17 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+import { format, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
+
+const today = startOfDay(new Date());
+const fromDate = format(startOfMonth(today), 'yyyy-MM-dd');
+const toDate = format(endOfMonth(today), 'yyyy-MM-dd');
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
-    },
-  })
+      headers: request.headers
+    }
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,45 +19,45 @@ export async function updateSession(request: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value
+          return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value,
-            ...options,
-          })
+            ...options
+          });
           response = NextResponse.next({
             request: {
-              headers: request.headers,
-            },
-          })
+              headers: request.headers
+            }
+          });
           response.cookies.set({
             name,
             value,
-            ...options,
-          })
+            ...options
+          });
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({
             name,
             value: '',
-            ...options,
-          })
+            ...options
+          });
           response = NextResponse.next({
             request: {
-              headers: request.headers,
-            },
-          })
+              headers: request.headers
+            }
+          });
           response.cookies.set({
             name,
             value: '',
-            ...options,
-          })
-        },
-      },
+            ...options
+          });
+        }
+      }
     }
-  )
+  );
 
   const user = await supabase.auth.getUser();
 
@@ -63,12 +68,34 @@ export async function updateSession(request: NextRequest) {
     .single();
 
   if (request.nextUrl.pathname.startsWith('/dashboard') && user.error) {
-    return NextResponse.redirect(new URL('/', request.url))
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (request.nextUrl.pathname.endsWith('/') && user.error === null && role?.role === "admin") {
+  if (
+    request.nextUrl.pathname.endsWith('/') &&
+    user.error === null &&
+    role?.role === 'admin'
+  ) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  return response
+  if (
+    request.nextUrl.pathname.endsWith('/dashboard') &&
+    user.error === null &&
+    role?.role === 'admin'
+  ) {
+    const currentUrl = new URL(request.url);
+    const currentFrom = currentUrl.searchParams.get('from');
+    const currentTo = currentUrl.searchParams.get('to');
+
+    // Check if from or to is missing in the URL
+    if (!currentFrom || !currentTo) {
+      const dashboardUrl = new URL('/dashboard', request.url);
+      dashboardUrl.searchParams.set('from', fromDate);
+      dashboardUrl.searchParams.set('to', toDate);
+      return NextResponse.redirect(dashboardUrl);
+    }
+  }
+
+  return response;
 }

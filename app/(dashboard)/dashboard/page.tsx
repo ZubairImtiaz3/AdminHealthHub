@@ -1,5 +1,6 @@
+import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { Overview } from '@/components/overview';
-import { RecentSales } from '@/components/recent-sales';
+import { RecentPatients } from '@/components/recent-patients';
 import {
   Card,
   CardContent,
@@ -8,8 +9,90 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Report } from '@/constants/data';
+import { formatReleaseDate } from '@/lib/utils';
+import { createClient } from '@/utils/supabase/server';
+import { isWithinInterval, parseISO } from 'date-fns';
+import { cookies } from 'next/headers';
 
-export default function page() {
+interface SearchParams {
+  from?: string;
+  to?: string;
+}
+
+export default async function page({
+  searchParams
+}: {
+  searchParams: SearchParams;
+}) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  // to get today's date in local timezone
+  const today = new Date();
+  const todayString = formatReleaseDate(
+    today.toLocaleDateString(),
+    'YYYY-MM-DD'
+  );
+
+  // for patients
+  const { data: patientsData } = await supabase.from('patients').select('*');
+  const patients = patientsData ? patientsData : [];
+
+  // to get today's patients in local timezone
+  const todayPatients = patients.filter((patient) => {
+    const createdAt = formatReleaseDate(patient?.created_at, 'YYYY-MM-DD');
+    return createdAt === todayString;
+  });
+
+  // for reports
+  const { data: reportsData } = await supabase.from('reports').select('*');
+  const reports = reportsData ? reportsData : [];
+
+  // to get today's reports in local timezone
+  const todayReports = reports.filter((report) => {
+    const createdAt = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
+    return createdAt === todayString;
+  });
+
+  let patientsReports: Report[] = [];
+
+  // Iterate over each patient to get their reports
+  for (const patient of patients) {
+    const { data: patientData } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('patient_id', patient.id);
+
+    if (patientData) {
+      patientsReports.push(...patientData);
+    }
+  }
+
+  // filtering logic according to date
+  let filteredPatients = patients;
+  let filteredReports = reports;
+
+  if (searchParams.from && searchParams.to) {
+    const fromDate = parseISO(searchParams.from);
+    const toDate = parseISO(searchParams.to);
+
+    filteredPatients = patients.filter((patient) => {
+      const createdAtDate = formatReleaseDate(
+        patient?.created_at,
+        'YYYY-MM-DD'
+      );
+      const patientsDate = parseISO(createdAtDate);
+      return isWithinInterval(patientsDate, { start: fromDate, end: toDate });
+    });
+
+    filteredReports = reports.filter((report) => {
+      const createdAtDate = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
+      const reportsDate = parseISO(createdAtDate);
+      return isWithinInterval(reportsDate, { start: fromDate, end: toDate });
+    });
+  }
+
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -17,6 +100,9 @@ export default function page() {
           <h2 className="text-3xl font-bold tracking-tight">
             Hi, Welcome back 👋
           </h2>
+          <div>
+            <CalendarDateRangePicker />
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -40,9 +126,11 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
+              <div className="text-2xl font-bold">
+                {filteredPatients.length}
+              </div>
               <p className="text-xs text-muted-foreground">
-                +20.1% from last month
+                You have total {filteredPatients.length} number of patients.
               </p>
             </CardContent>
           </Card>
@@ -66,9 +154,9 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">235</div>
+              <div className="text-2xl font-bold">{filteredReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                +180.1% from last month
+                You have total {filteredReports.length} number of reports.
               </p>
             </CardContent>
           </Card>
@@ -96,9 +184,9 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+12</div>
+              <div className="text-2xl font-bold">{todayPatients.length}</div>
               <p className="text-xs text-muted-foreground">
-                +19% from yesterday
+                You have total {todayPatients.length} patients today.
               </p>
             </CardContent>
           </Card>
@@ -121,9 +209,9 @@ export default function page() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+18</div>
+              <div className="text-2xl font-bold">{todayReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                +11% since yesterday
+                You have total {todayReports.length} reports today.
               </p>
             </CardContent>
           </Card>
@@ -139,13 +227,16 @@ export default function page() {
           </Card>
           <Card className="col-span-4 md:col-span-3">
             <CardHeader>
-              <CardTitle>Recent Reports</CardTitle>
+              <CardTitle>Recent Patients</CardTitle>
               <CardDescription>
-                You have added 265 new reports this month.
+                You have added these patients recently.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentSales />
+              <RecentPatients
+                patients={patients}
+                patientsReports={patientsReports ? patientsReports : []}
+              />
             </CardContent>
           </Card>
         </div>
