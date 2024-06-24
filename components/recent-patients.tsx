@@ -35,8 +35,7 @@ export function RecentPatients({ patients, patientsReports }: Props) {
               </p>
             </div>
             <div className="ml-auto font-medium">
-              {getReportCount(patient.id)} {''}
-              {getReportCount(patient.id) === 1 ? 'Report' : 'Reports'}
+              +{getReportCount(patient.id)} Report
             </div>
           </div>
         ))}

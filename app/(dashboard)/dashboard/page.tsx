@@ -130,7 +130,7 @@ export default async function page({
                 {filteredPatients.length}
               </div>
               <p className="text-xs text-muted-foreground">
-                You have total {filteredPatients.length} number of patients.
+                Based On Selected Date Range
               </p>
             </CardContent>
           </Card>
@@ -156,7 +156,7 @@ export default async function page({
             <CardContent>
               <div className="text-2xl font-bold">{filteredReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                You have total {filteredReports.length} number of reports.
+                Based On Selected Date Range
               </p>
             </CardContent>
           </Card>

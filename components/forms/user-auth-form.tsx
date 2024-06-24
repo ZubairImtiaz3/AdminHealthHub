@@ -117,7 +117,11 @@ export default function UserAuthForm() {
               </FormItem>
             )}
           />
-          <Button disabled={loading} className="ml-auto w-full" type="submit">
+          <Button
+            disabled={loading}
+            className="ml-auto w-full bg-[#5C70FF]"
+            type="submit"
+          >
             Sign in
           </Button>
         </form>
