@@ -79,7 +79,7 @@ export default async function page({ searchParams }: paramsProps) {
           totalUsers={totalUsers}
           data={filteredReports}
           pageCount={pageCount}
-        /> */}
+        />
       </div>
     </>
   );
