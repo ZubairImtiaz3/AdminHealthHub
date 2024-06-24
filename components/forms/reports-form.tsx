@@ -1,10 +1,10 @@
 'use client';
 import * as z from 'zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
 import { Trash } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ import ReportUploader from '@/components/file-uploader';
 import { createClient } from '@/utils/supabase/client';
 import { PDFDocument } from 'pdf-lib';
 import { useSearchParams } from 'next/navigation';
+import { Icons } from '../icons';
 
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
@@ -39,17 +40,57 @@ interface PatientsFormProps {
   initialData: any | null;
 }
 
-export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
+interface ReportData {
+  title: string;
+  description: string;
+}
+
+export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const supabase = createClient();
   const searchParams = useSearchParams();
+  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initialData, setInitialData] = useState<ReportData | null>(null);
+  const [fetching, setFetching] = useState(true);
   const title = initialData ? 'Edit report' : 'Add report';
   const description = initialData ? 'Edit a report.' : 'Add a new report';
   const toastMessage = initialData ? 'Report updated.' : 'Report created.';
   const action = initialData ? 'Save changes' : 'Create';
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      if (params.reportsId && params.reportsId !== 'new') {
+        const { data, error } = await supabase
+          .from('reports')
+          .select('*')
+          .eq('id', params.reportsId)
+          .single();
+
+        console.log(data);
+
+        if (data) {
+          setInitialData({
+            title: data.report_title,
+            description: data.report_description
+          });
+        } else if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Error fetching patient data',
+            description: error.message
+          });
+        }
+        setFetching(false);
+      } else {
+        setFetching(false);
+      }
+    };
+
+    fetchReport();
+  }, [params.reportsId, supabase, toast]);
 
   const defaultValues = initialData
     ? initialData
@@ -63,6 +104,12 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
     resolver: zodResolver(formSchema),
     defaultValues
   });
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
 
   const patientId = searchParams.get('id');
 
@@ -184,15 +231,36 @@ export const ReportsForm: React.FC<PatientsFormProps> = ({ initialData }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      // await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', params.reportsId);
+
+      router.back();
       router.refresh();
-      // router.push(`/${params.storeId}/products`);
+      toast({
+        title: 'Success',
+        description: 'Report successfully deleted.'
+      });
     } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.'
+      });
     } finally {
       setLoading(false);
       setOpen(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Icons.spinner className="mr-2 h-7 w-7 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <>
