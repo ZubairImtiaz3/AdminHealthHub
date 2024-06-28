@@ -2,7 +2,7 @@ import BreadCrumb from '@/components/breadcrumb';
 import { PatientsForm } from '@/components/forms/patients-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import React from 'react';
-import { columns as assocColumns } from '@/components/tables/association-report/columns';
+import { columns as assocColumns } from '@/components/tables/association-table/columns';
 
 import { DataTable } from '@/components/ui/data-table';
 import { Separator } from '@/components/ui/separator';

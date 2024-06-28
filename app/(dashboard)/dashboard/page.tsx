@@ -186,7 +186,7 @@ export default async function page({
             <CardContent>
               <div className="text-2xl font-bold">{todayPatients.length}</div>
               <p className="text-xs text-muted-foreground">
-                You have total {todayPatients.length} patients today.
+                You Have Total {todayPatients.length} Patients Today.
               </p>
             </CardContent>
           </Card>
@@ -211,7 +211,7 @@ export default async function page({
             <CardContent>
               <div className="text-2xl font-bold">{todayReports.length}</div>
               <p className="text-xs text-muted-foreground">
-                You have total {todayReports.length} reports today.
+                You Have Total {todayReports.length} Reports Today.
               </p>
             </CardContent>
           </Card>

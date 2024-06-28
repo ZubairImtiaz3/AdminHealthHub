@@ -41,6 +41,14 @@ const formSchema = z.object({
 
 type PatientsFormValues = z.infer<typeof formSchema>;
 
+interface NewPatient {
+  first_name: string;
+  last_name: string;
+  gender: string;
+  phone_number: string;
+  user_id?: string;
+}
+
 interface PatientsFormProps {
   categories: any;
 }
@@ -156,17 +164,20 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
 
         const userId = profile?.id;
 
+        const patientData: NewPatient = {
+          first_name: data?.first_name,
+          last_name: data?.last_name,
+          phone_number: data?.phone_number,
+          gender: data?.gender
+        };
+
+        if (userId) {
+          patientData.user_id = userId;
+        }
+
         const { data: patients, error } = await supabase
           .from('patients')
-          .insert([
-            {
-              user_id: '91ebb764-4d52-4cdc-94ef-7060a81300f4',
-              first_name: data?.first_name,
-              last_name: data?.last_name,
-              phone_number: data?.phone_number,
-              gender: data?.gender
-            }
-          ])
+          .insert([patientData])
           .select();
 
         if (error) {
