@@ -7,9 +7,12 @@ interface Props {
 }
 
 export function RecentPatients({ patients, patientsReports }: Props) {
-  const getReportCount = (patientId: string) => {
-    return patientsReports.filter((report) => report.patient_id === patientId)
-      .length;
+  const getReportCount = (
+    patientId: string,
+    patientsReports: Report[]
+  ): number => {
+    const patient = patientsReports.find((report) => report.id === patientId);
+    return patient && patient.reports ? patient.reports.length : 0;
   };
 
   return (
@@ -35,7 +38,7 @@ export function RecentPatients({ patients, patientsReports }: Props) {
               </p>
             </div>
             <div className="ml-auto font-medium">
-              +{getReportCount(patient.id)} Report
+              +{getReportCount(patient.id, patientsReports)} Report
             </div>
           </div>
         ))}

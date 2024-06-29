@@ -44,7 +44,7 @@ export const columns: ColumnDef<Report>[] = [
   {
     header: 'PATIENT NAME',
     cell: ({ row }) => {
-      const patient = row.original.patient as
+      const patient = row.original.patients as
         | { first_name: string; last_name: string }
         | undefined;
       return patient

@@ -9,7 +9,6 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Report } from '@/constants/data';
 import { formatReleaseDate } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/server';
 import { isWithinInterval, parseISO } from 'date-fns';
@@ -55,19 +54,12 @@ export default async function page({
     return createdAt === todayString;
   });
 
-  let patientsReports: Report[] = [];
-
-  // Iterate over each patient to get their reports
-  for (const patient of patients) {
-    const { data: patientData } = await supabase
-      .from('reports')
-      .select('*')
-      .eq('patient_id', patient.id);
-
-    if (patientData) {
-      patientsReports.push(...patientData);
-    }
-  }
+  // get patients with their reports
+  const { data: patientsReportsData } = await supabase.from('patients')
+    .select(`*, 
+    reports (*)
+  `);
+  const patientsReports = patientsReportsData ? patientsReportsData : [];
 
   // filtering logic according to date
   let filteredPatients = patients;

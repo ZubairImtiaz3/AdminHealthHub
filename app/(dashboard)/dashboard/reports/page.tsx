@@ -3,10 +3,6 @@ import { columns } from '@/components/tables/reports-tables/columns';
 import { ReportsTable } from '@/components/tables/reports-tables/reports-table';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-
-import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 
@@ -19,25 +15,15 @@ type paramsProps = {
 };
 
 export default async function page({ searchParams }: paramsProps) {
-
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  // fetch reports
-  const { data: reportsData } = await supabase.from('reports').select('*');
-  const reports = reportsData ? reportsData : [];
-
-  // fetch patient data for each report
-  const reportsWithPatientData = await Promise.all(
-    reports.map(async (report) => {
-      const { data: patientData } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', report.patient_id)
-        .single();
-      return { ...report, patient: patientData };
-    })
-  );
+  // get reports with their patients
+  const { data: patientsReportsData } = await supabase.from('reports')
+    .select(`*, 
+    patients (*)
+  `);
+  const patientsReports = patientsReportsData ? patientsReportsData : [];
 
   const page = Number(searchParams.page) || 1;
   const pageLimit = Number(searchParams.limit) || 10;
@@ -48,12 +34,12 @@ export default async function page({ searchParams }: paramsProps) {
     : searchParams.search || null;
 
   const filteredReports = report_title
-    ? reportsWithPatientData.filter((reportsWithPatientData) =>
-        reportsWithPatientData.report_title
+    ? patientsReports.filter((patientsReports) =>
+        patientsReports.report_title
           .toLowerCase()
           .includes(report_title.toLowerCase())
       )
-    : reportsWithPatientData;
+    : patientsReports;
 
   const totalUsers = filteredReports.length;
   const pageCount = Math.ceil(totalUsers / pageLimit);
@@ -70,7 +56,6 @@ export default async function page({ searchParams }: paramsProps) {
           />
         </div>
         <Separator />
-
 
         <ReportsTable
           searchKey="report_title"

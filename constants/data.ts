@@ -22,7 +22,8 @@ export type Report = {
   associated_patients?: Patient[];
   created_at: string;
   patient?: string;
-
+  patients?: string;
+  reports?: [];
 };
 
 export const navItems: NavItem[] = [
