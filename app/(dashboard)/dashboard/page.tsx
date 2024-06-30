@@ -35,10 +35,14 @@ export default async function page({
   );
 
   // get patients with their reports
-  const { data: patientsReportsData } = await supabase.from('patients')
-    .select(`*, 
+  const { data: patientsReportsData } = await supabase
+    .from('patients')
+    .select(
+      `*, 
     reports (*)
-  `);
+  `
+    )
+    .order('created_at', { ascending: true });
   const patientsWithReports = patientsReportsData ? patientsReportsData : [];
 
   // to get today's patients in local timezone
