@@ -1,12 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Patient, Report } from '@/constants/data';
+import { Report } from '@/constants/data';
 
 interface Props {
-  patients: Patient[];
   patientsReports: Report[];
 }
 
-export function RecentPatients({ patients, patientsReports }: Props) {
+export function RecentPatients({ patientsReports }: Props) {
   const getReportCount = (
     patientId: string,
     patientsReports: Report[]
@@ -17,7 +16,7 @@ export function RecentPatients({ patients, patientsReports }: Props) {
 
   return (
     <div className="space-y-8">
-      {patients
+      {patientsReports
         .reverse()
         .slice(0, 5)
         .map((patient) => (
@@ -25,8 +24,8 @@ export function RecentPatients({ patients, patientsReports }: Props) {
             <Avatar className="h-9 w-9">
               <AvatarImage src="/avatars/default.png" alt="Avatar" />
               <AvatarFallback>
-                {patient.first_name.charAt(0)}
-                {patient.last_name.charAt(0)}
+                {patient?.first_name?.charAt(0)}
+                {patient?.last_name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="ml-4 space-y-1">
