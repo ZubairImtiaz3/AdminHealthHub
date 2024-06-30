@@ -180,11 +180,13 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
           .insert([patientData])
           .select();
 
+        const newUserId = patients?.[0]?.id;
+
         if (error) {
           throw error;
         }
+        router.push(`/dashboard/patients/${newUserId}`);
       }
-      router.push(`/dashboard/patients`);
       router.refresh();
       toast({
         title: 'Success.',
@@ -245,19 +247,19 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
       />
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
-        <div className="space-x-4">
-          <Button
-            className="gap-1"
-            disabled={loading}
-            onClick={() =>
-              router.push(`/dashboard/reports/new?id=${params.patientsId}`)
-            }
-          >
-            <Plus className="h-4 w-4" />
-            Add Report
-          </Button>
+        {initialData && (
+          <div className="space-x-4">
+            <Button
+              className="gap-1"
+              disabled={loading}
+              onClick={() =>
+                router.push(`/dashboard/reports/new?id=${params.patientsId}`)
+              }
+            >
+              <Plus className="h-4 w-4" />
+              Add Report
+            </Button>
 
-          {initialData && (
             <Button
               disabled={loading}
               variant="destructive"
@@ -266,8 +268,8 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
             >
               <Trash className="h-4 w-4" />
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <Separator />
       <Form {...form}>
