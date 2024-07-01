@@ -15,14 +15,18 @@ export type Report = {
   patient_id: string;
   admin_id: string;
   user_id: string;
-  last_name: string;
   report_description: string;
   report_link: string;
   report_title: string;
-  associated_patients?: Patient[];
   created_at: string;
+  // optional props for patientsWithReports
+  associated_patients?: Patient[];
   patient?: string;
-
+  patients?: string;
+  reports?: [];
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
 };
 
 export const navItems: NavItem[] = [

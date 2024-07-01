@@ -1,20 +1,22 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Patient, Report } from '@/constants/data';
+import { Report } from '@/constants/data';
 
 interface Props {
-  patients: Patient[];
   patientsReports: Report[];
 }
 
-export function RecentPatients({ patients, patientsReports }: Props) {
-  const getReportCount = (patientId: string) => {
-    return patientsReports.filter((report) => report.patient_id === patientId)
-      .length;
+export function RecentPatients({ patientsReports }: Props) {
+  const getReportCount = (
+    patientId: string,
+    patientsReports: Report[]
+  ): number => {
+    const patient = patientsReports.find((report) => report.id === patientId);
+    return patient && patient.reports ? patient.reports.length : 0;
   };
 
   return (
     <div className="space-y-8">
-      {patients
+      {patientsReports
         .reverse()
         .slice(0, 5)
         .map((patient) => (
@@ -22,8 +24,8 @@ export function RecentPatients({ patients, patientsReports }: Props) {
             <Avatar className="h-9 w-9">
               <AvatarImage src="/avatars/default.png" alt="Avatar" />
               <AvatarFallback>
-                {patient.first_name.charAt(0)}
-                {patient.last_name.charAt(0)}
+                {patient?.first_name?.charAt(0)}
+                {patient?.last_name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="ml-4 space-y-1">
@@ -35,7 +37,7 @@ export function RecentPatients({ patients, patientsReports }: Props) {
               </p>
             </div>
             <div className="ml-auto font-medium">
-              +{getReportCount(patient.id)} Report
+              +{getReportCount(patient.id, patientsReports)} Report
             </div>
           </div>
         ))}

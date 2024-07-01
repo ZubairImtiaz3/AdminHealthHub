@@ -9,7 +9,6 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Report } from '@/constants/data';
 import { formatReleaseDate } from '@/lib/utils';
 import { createClient } from '@/utils/supabase/server';
 import { isWithinInterval, parseISO } from 'date-fns';
@@ -35,62 +34,62 @@ export default async function page({
     'YYYY-MM-DD'
   );
 
-  // for patients
-  const { data: patientsData } = await supabase.from('patients').select('*');
-  const patients = patientsData ? patientsData : [];
+  // get patients with their reports
+  const { data: patientsReportsData } = await supabase
+    .from('patients')
+    .select(
+      `*, 
+    reports (*)
+  `
+    )
+    .order('created_at', { ascending: true });
+  const patientsWithReports = patientsReportsData ? patientsReportsData : [];
 
   // to get today's patients in local timezone
-  const todayPatients = patients.filter((patient) => {
-    const createdAt = formatReleaseDate(patient?.created_at, 'YYYY-MM-DD');
+  const todayPatients = patientsWithReports.filter((patientsReport) => {
+    const createdAt = formatReleaseDate(
+      patientsReport?.created_at,
+      'YYYY-MM-DD'
+    );
     return createdAt === todayString;
   });
 
-  // for reports
-  const { data: reportsData } = await supabase.from('reports').select('*');
-  const reports = reportsData ? reportsData : [];
-
-  // to get today's reports in local timezone
-  const todayReports = reports.filter((report) => {
-    const createdAt = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
-    return createdAt === todayString;
-  });
-
-  let patientsReports: Report[] = [];
-
-  // Iterate over each patient to get their reports
-  for (const patient of patients) {
-    const { data: patientData } = await supabase
-      .from('reports')
-      .select('*')
-      .eq('patient_id', patient.id);
-
-    if (patientData) {
-      patientsReports.push(...patientData);
-    }
-  }
+  const todayReports = patientsWithReports
+    .flatMap((patient) => patient.reports || [])
+    .filter((report) => {
+      const createdAt = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
+      return createdAt === todayString;
+    });
 
   // filtering logic according to date
-  let filteredPatients = patients;
-  let filteredReports = reports;
+  let filteredPatients = patientsWithReports;
+  let filteredReports = patientsWithReports.flatMap(
+    (patient) => patient.reports || []
+  );
 
   if (searchParams.from && searchParams.to) {
     const fromDate = parseISO(searchParams.from);
     const toDate = parseISO(searchParams.to);
 
-    filteredPatients = patients.filter((patient) => {
+    filteredPatients = patientsWithReports.filter((patientsReport) => {
       const createdAtDate = formatReleaseDate(
-        patient?.created_at,
+        patientsReport?.created_at,
         'YYYY-MM-DD'
       );
       const patientsDate = parseISO(createdAtDate);
       return isWithinInterval(patientsDate, { start: fromDate, end: toDate });
     });
 
-    filteredReports = reports.filter((report) => {
-      const createdAtDate = formatReleaseDate(report?.created_at, 'YYYY-MM-DD');
-      const reportsDate = parseISO(createdAtDate);
-      return isWithinInterval(reportsDate, { start: fromDate, end: toDate });
-    });
+    filteredReports = patientsWithReports
+      .flatMap((patient) => patient.reports || [])
+      .filter((report) => {
+        const createdAtDate = formatReleaseDate(
+          report?.created_at,
+          'YYYY-MM-DD'
+        );
+        const reportsDate = parseISO(createdAtDate);
+        return isWithinInterval(reportsDate, { start: fromDate, end: toDate });
+      });
   }
 
   return (
@@ -234,8 +233,7 @@ export default async function page({
             </CardHeader>
             <CardContent>
               <RecentPatients
-                patients={patients}
-                patientsReports={patientsReports ? patientsReports : []}
+                patientsReports={patientsWithReports ? patientsWithReports : []}
               />
             </CardContent>
           </Card>
