@@ -12,7 +12,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Patient } from '@/constants/data';
 import { createClient } from '@/utils/supabase/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 import { useState } from 'react';
 
 interface CellActionProps {

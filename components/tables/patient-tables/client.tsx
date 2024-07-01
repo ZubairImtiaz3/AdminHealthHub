@@ -5,7 +5,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { Patient } from '@/constants/data';
 import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 import { columns } from './columns';
 
 interface ProductsClientProps {

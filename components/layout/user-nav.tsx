@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import { toast } from '../ui/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 
 export function UserNav({ userProfile }: any) {
   const router = useRouter();

@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from '@/components/ui/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 import { createClient } from '@/utils/supabase/client';
 import signOut from '@/actions/signOut';
 

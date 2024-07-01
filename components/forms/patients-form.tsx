@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Plus, Trash } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {

@@ -4,7 +4,7 @@ import { CellAction } from './cell-action';
 import { Patient } from '@/constants/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 
 const AssociatedPatientsCell = ({
   associatedPatients
