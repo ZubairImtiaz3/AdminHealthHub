@@ -154,7 +154,7 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
           title: 'Success.',
           description: 'Patient updated successfully.'
         });
-        router.refresh();
+        router.push(`/dashboard/patients`);
       } else {
         const { data: profile } = await supabase
           .from('profiles')
@@ -324,8 +324,8 @@ export const PatientsForm: React.FC<PatientsFormProps> = ({ categories }) => {
                   <Select
                     disabled={loading}
                     onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
+                    value={field.value || initialData?.gender}
+                    defaultValue={initialData?.gender}
                   >
                     <FormControl>
                       <SelectTrigger>
