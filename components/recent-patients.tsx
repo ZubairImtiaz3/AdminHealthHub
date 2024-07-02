@@ -14,6 +14,10 @@ export function RecentPatients({ patientsReports }: Props) {
     return patient && patient.reports ? patient.reports.length : 0;
   };
 
+  if (patientsReports.length === 0) {
+    return <div className="mt-32 text-center">No Recent Patients Found...</div>;
+  }
+
   return (
     <div className="space-y-8">
       {patientsReports

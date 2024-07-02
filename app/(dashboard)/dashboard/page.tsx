@@ -43,6 +43,7 @@ export default async function page({
   `
     )
     .order('created_at', { ascending: true });
+
   const patientsWithReports = patientsReportsData ? patientsReportsData : [];
 
   // to get today's patients in local timezone

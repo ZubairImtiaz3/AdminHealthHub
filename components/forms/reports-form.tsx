@@ -56,6 +56,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const [loading, setLoading] = useState(false);
   const [initialData, setInitialData] = useState<ReportData | null>(null);
   const [fetching, setFetching] = useState(true);
+  const [errorFetch, setErrorFetch] = useState<any>(null);
   const title = initialData ? 'Edit report' : 'Add report';
   const description = initialData ? 'Edit a report.' : 'Add a new report';
   const toastMessage = initialData ? 'Report updated.' : 'Report created.';
@@ -70,19 +71,13 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           .eq('id', params.reportsId)
           .single();
 
-        console.log(data);
-
         if (data) {
           setInitialData({
             title: data.report_title,
             description: data.report_description
           });
         } else if (error) {
-          toast({
-            variant: 'destructive',
-            title: 'Error fetching patient data',
-            description: error.message
-          });
+          setErrorFetch(error.message);
         }
         setFetching(false);
       } else {
@@ -259,6 +254,17 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
     return (
       <div className="flex h-screen items-center justify-center">
         <Icons.spinner className="mr-2 h-7 w-7 animate-spin" />
+      </div>
+    );
+  }
+
+  if (errorFetch) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Heading
+          title="Invalid Patient Report Request"
+          description="Something Went Wrong..."
+        />
       </div>
     );
   }

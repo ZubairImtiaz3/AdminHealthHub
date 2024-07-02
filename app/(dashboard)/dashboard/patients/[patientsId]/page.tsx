@@ -25,32 +25,35 @@ export default async function Page({
     { title: 'Add', link: '/dashboard/patients/add' }
   ];
 
-  const { data: Reports, error } = await supabase
-    .from('reports')
-    .select()
-    .eq('patient_id', params.patientsId);
+  const { data, error: patientError } = await supabase
+    .from('patients')
+    .select(
+      `*, 
+    reports (*)
+  `
+    )
+    .eq('id', params.patientsId);
 
-  const patientsReports = Reports ? Reports : [];
+  const patient = data && data.length > 0 ? data[0] : null;
 
-  let userId;
-
-  if (Reports && Reports.length > 0) {
-    userId = Reports[0]?.user_id;
-  } else {
-    const { data: patient, error: patientError } = await supabase
-      .from('patients')
-      .select()
-      .eq('id', params.patientsId);
-
-    if (patient && patient.length > 0) {
-      userId = patient[0].user_id;
-    }
+  if (!patient) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Heading
+          title="Invalid Patient Request"
+          description="Something Went Wrong..."
+        />
+      </div>
+    );
   }
+
+  const patientsReports = patient.reports;
+  const patientUserId = patient.user_id;
 
   const { data: assocsPatient, error: assocsPatientError } = await supabase
     .from('patients')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', patientUserId);
 
   const assocsPatients = assocsPatient ? assocsPatient : [];
 
