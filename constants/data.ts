@@ -59,13 +59,13 @@ export const navItems: NavItem[] = [
 export const superNavItems: NavItem[] = [
   {
     title: 'Admins',
-    href: '/admins',
+    href: '/dashboard/admins',
     icon: 'users',
     label: 'admins'
   },
   {
     title: 'Add Admin',
-    href: '/add-admin',
+    href: '/dashboard/admins/new',
     icon: 'profile',
     label: 'add-admin'
   }

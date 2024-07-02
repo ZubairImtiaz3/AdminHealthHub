@@ -6,15 +6,6 @@ const today = startOfDay(new Date());
 const fromDate = format(startOfMonth(today), 'yyyy-MM-dd');
 const toDate = format(endOfMonth(today), 'yyyy-MM-dd');
 
-const adminRoutes = [
-  '/dashboard',
-  '/dashboard/patients',
-  '/dashboard/reports',
-  '/dashboard/profile'
-];
-
-const superadminRoutes = ['/dashboard/admins', '/dashboard/add-admin'];
-
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -76,18 +67,21 @@ export async function updateSession(request: NextRequest) {
     .eq('id', user.data.user?.id)
     .single();
 
+  // Restrict dashboard from unauthorized
   if (request.nextUrl.pathname.startsWith('/dashboard') && user.error) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  if (
-    request.nextUrl.pathname.endsWith('/') &&
-    user.error === null &&
-    role?.role === 'admin'
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Restrict login from authorized
+  if (request.nextUrl.pathname.endsWith('/') && user.error === null) {
+    let redirectPath = '/dashboard';
+    if (role?.role === 'superadmin') {
+      redirectPath = '/dashboard/admins';
+    }
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 
+  //Add range query to admin dashboard
   if (
     request.nextUrl.pathname.endsWith('/dashboard') &&
     user.error === null &&
@@ -109,12 +103,18 @@ export async function updateSession(request: NextRequest) {
   // Restrict routes based on role
   if (
     role?.role === 'admin' &&
-    !adminRoutes.includes(request.nextUrl.pathname)
+    request.nextUrl.pathname.startsWith('/dashboard/admins')
   ) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
-  } else if (
+  }
+
+  if (
     role?.role === 'superadmin' &&
-    !superadminRoutes.includes(request.nextUrl.pathname)
+    (
+      request.nextUrl.pathname.endsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/dashboard/patients') ||
+      request.nextUrl.pathname.startsWith('/dashboard/reports')
+    )
   ) {
     return NextResponse.redirect(new URL('/dashboard/admins', request.url));
   }
