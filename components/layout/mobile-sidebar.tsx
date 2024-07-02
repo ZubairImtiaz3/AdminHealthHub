@@ -1,17 +1,15 @@
 'use client';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { navItems } from '@/constants/data';
+import { navItems, superNavItems } from '@/constants/data';
 import { MenuIcon } from 'lucide-react';
 import { useState } from 'react';
 
-// import { Playlist } from "../data/playlists";
-
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  // playlists: Playlist[];
+  profile: string;
 }
 
-export function MobileSidebar({ className }: SidebarProps) {
+export function MobileSidebar({ className, profile }: SidebarProps) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -27,7 +25,7 @@ export function MobileSidebar({ className }: SidebarProps) {
               </h2>
               <div className="space-y-1">
                 <DashboardNav
-                  items={navItems}
+                  items={profile === 'superadmin' ? superNavItems : navItems}
                   isMobileNav={true}
                   setOpen={setOpen}
                 />

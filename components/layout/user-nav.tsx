@@ -47,8 +47,8 @@ export function UserNav({ userProfile }: any) {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src={userProfile.user?.image ?? ''}
-              alt={userProfile.user?.name ?? ''}
+              src={userProfile?.user?.image ?? ''}
+              alt={userProfile?.user?.name ?? ''}
             />
             <AvatarFallback>
               {userProfile.first_name?.[0]}

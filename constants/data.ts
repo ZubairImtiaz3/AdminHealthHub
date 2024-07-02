@@ -55,3 +55,18 @@ export const navItems: NavItem[] = [
     label: 'profile'
   }
 ];
+
+export const superNavItems: NavItem[] = [
+  {
+    title: 'Admins',
+    href: '/admins',
+    icon: 'users',
+    label: 'admins'
+  },
+  {
+    title: 'Add Admin',
+    href: '/add-admin',
+    icon: 'profile',
+    label: 'add-admin'
+  }
+];

@@ -9,17 +9,17 @@ export default async function Header() {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
 
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user?.id)
-      .single();
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user?.id)
+    .single();
 
-    const profile = profiles ? profiles : null;
+  const profile = profiles ? profiles : null;
 
   return (
     <div className="supports-backdrop-blur:bg-background/60 fixed left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -41,7 +41,7 @@ export default async function Header() {
           </Link>
         </div>
         <div className={cn('block lg:!hidden')}>
-          <MobileSidebar />
+          <MobileSidebar profile={profile?.role} />
         </div>
 
         <div className="flex items-center gap-2">

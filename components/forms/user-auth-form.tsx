@@ -53,7 +53,7 @@ export default function UserAuthForm() {
       .eq('id', user.user?.id)
       .single();
 
-    if (!error && role?.role === 'admin') {
+    if ((!error && role?.role === 'admin') || role?.role === 'superadmin') {
       toast({
         title: 'Login Successfully.',
         description: 'Redirecting to your Dashboard'
