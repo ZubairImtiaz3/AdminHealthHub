@@ -51,8 +51,8 @@ export function UserNav({ userProfile }: any) {
               alt={userProfile?.user?.name ?? ''}
             />
             <AvatarFallback>
-              {userProfile.first_name?.[0]}
-              {userProfile.last_name?.[0]}
+              {userProfile?.first_name?.[0]}
+              {userProfile?.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -61,10 +61,10 @@ export function UserNav({ userProfile }: any) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {userProfile.first_name} {userProfile.last_name}
+              {userProfile?.first_name} {userProfile?.last_name}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {userProfile.email}
+              {userProfile?.email}
             </p>
           </div>
         </DropdownMenuLabel>

@@ -6,6 +6,15 @@ const today = startOfDay(new Date());
 const fromDate = format(startOfMonth(today), 'yyyy-MM-dd');
 const toDate = format(endOfMonth(today), 'yyyy-MM-dd');
 
+const adminRoutes = [
+  '/dashboard',
+  '/dashboard/patients',
+  '/dashboard/reports',
+  '/dashboard/profile'
+];
+
+const superadminRoutes = ['/dashboard/admins', '/dashboard/add-admin'];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -95,6 +104,19 @@ export async function updateSession(request: NextRequest) {
       dashboardUrl.searchParams.set('to', toDate);
       return NextResponse.redirect(dashboardUrl);
     }
+  }
+
+  // Restrict routes based on role
+  if (
+    role?.role === 'admin' &&
+    !adminRoutes.includes(request.nextUrl.pathname)
+  ) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  } else if (
+    role?.role === 'superadmin' &&
+    !superadminRoutes.includes(request.nextUrl.pathname)
+  ) {
+    return NextResponse.redirect(new URL('/dashboard/admins', request.url));
   }
 
   return response;
