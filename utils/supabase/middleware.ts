@@ -113,7 +113,8 @@ export async function updateSession(request: NextRequest) {
     (
       request.nextUrl.pathname.endsWith('/dashboard') ||
       request.nextUrl.pathname.startsWith('/dashboard/patients') ||
-      request.nextUrl.pathname.startsWith('/dashboard/reports')
+      request.nextUrl.pathname.startsWith('/dashboard/reports') ||
+      request.nextUrl.pathname.startsWith('/dashboard/profile')
     )
   ) {
     return NextResponse.redirect(new URL('/dashboard/admins', request.url));

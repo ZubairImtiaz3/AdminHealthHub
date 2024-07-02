@@ -15,6 +15,7 @@ import {
 import Link from 'next/link';
 import { toast } from '../ui/use-toast';
 import { useRouter } from 'next-nprogress-bar';
+import { navItems, superNavItems } from '@/constants/data';
 
 export function UserNav({ userProfile }: any) {
   const router = useRouter();
@@ -40,6 +41,9 @@ export function UserNav({ userProfile }: any) {
       console.error('An unexpected error occurred during sign-out:', error);
     }
   };
+
+  const displayedItems =
+    userProfile?.role === 'superadmin' ? superNavItems : navItems;
 
   return (
     <DropdownMenu>
@@ -70,24 +74,18 @@ export function UserNav({ userProfile }: any) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/dashboard/profile">
-            <DropdownMenuItem>
-              Profile
-              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/dashboard/patients">
-            <DropdownMenuItem>
-              Patients
-              <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/dashboard/reports">
-            <DropdownMenuItem>
-              Reports
-              <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-            </DropdownMenuItem>
-          </Link>
+          {displayedItems.map((item, index) => (
+            <Link key={item.title} href={`${item.href}`}>
+              <DropdownMenuItem>
+                {item.title}
+                {index === 0 ? (
+                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                ) : (
+                  <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+                )}
+              </DropdownMenuItem>
+            </Link>
+          ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
