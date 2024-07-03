@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { Patient } from '@/constants/data';
+import { Admin } from '@/constants/data';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next-nprogress-bar';
 import { columns } from './columns';
 
-interface ProductsClientProps {
-  data: Patient[];
+interface ClientProps {
+  data: Admin[];
 }
 
-export const UserClient: React.FC<ProductsClientProps> = ({ data }) => {
+export const UserClient: React.FC<ClientProps> = ({ data }) => {
   const router = useRouter();
 
   return (

@@ -1,39 +1,10 @@
 'use client';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
-import { Patient } from '@/constants/data';
+import { Admin } from '@/constants/data';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next-nprogress-bar';
 
-const AssociatedPatientsCell = ({
-  associatedPatients
-}: {
-  associatedPatients: Patient[];
-}) => {
-  const router = useRouter();
-
-  return (
-    <div>
-      {associatedPatients.length > 0 ? (
-        associatedPatients.map((patient: Patient) => (
-          <Button
-            className="px-0 pr-4"
-            onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
-            variant="link"
-            key={patient.id}
-          >
-            {patient.first_name} {patient.last_name}
-          </Button>
-        ))
-      ) : (
-        <span>No Associated Patients</span>
-      )}
-    </div>
-  );
-};
-
-export const columns: ColumnDef<Patient>[] = [
+export const columns: ColumnDef<Admin>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -54,25 +25,24 @@ export const columns: ColumnDef<Patient>[] = [
     enableHiding: false
   },
   {
-    accessorFn: (row) => `${row.first_name} ${row.last_name}`,
+    accessorFn: (row) => `${row.profiles.first_name} ${row.profiles.last_name}`,
     header: 'NAME'
   },
   {
-    accessorKey: 'gender',
-    header: 'GENDER'
+    accessorFn: (row) => `${row.profiles.email}`,
+    header: 'Email'
   },
   {
-    accessorKey: 'phone_number',
+    accessorFn: (row) => `${row.profiles.phone_number}`,
     header: 'PHONE NUMBER'
   },
   {
-    header: 'Associated Patients',
-    accessorKey: 'associated_patients',
-    cell: ({ row }) => (
-      <AssociatedPatientsCell
-        associatedPatients={row.original.associated_patients ?? []}
-      />
-    )
+    accessorKey: 'city',
+    header: 'City'
+  },
+  {
+    accessorKey: 'country',
+    header: 'Country'
   },
   {
     id: 'actions',

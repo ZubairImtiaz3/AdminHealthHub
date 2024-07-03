@@ -29,6 +29,25 @@ export type Report = {
   phone_number?: string;
 };
 
+export type Profile = {
+  id: string;
+  role: string;
+  email: string;
+  gender: string | null;
+  last_name: string;
+  first_name: string;
+  phone_number: string;
+};
+
+export type Admin = {
+  id: string;
+  created_at: string;
+  super_admin_id: string;
+  country: string;
+  city: string;
+  profiles: Profile;
+};
+
 export const navItems: NavItem[] = [
   {
     title: 'Dashboard',
