@@ -25,6 +25,8 @@ import { useParams } from 'next/navigation';
 import { useRouter } from 'next-nprogress-bar';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from '@/components/ui/use-toast';
+import { SignUpSubmit } from '@/actions/signUp';
 
 interface ProfileFormType {
   initialData: any | null;
@@ -58,16 +60,37 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      console.log('data', data);
       setLoading(true);
       if (initialData) {
-        // await axios.post(`/api/products/edit-product/${initialData._id}`, data);
+        // Update existing profile logic here
       } else {
-        // const res = await axios.post(`/api/products/create-product`, data);
-        // console.log("product", res);
+        const { profileError, signUpError } = await SignUpSubmit({
+          first_name: data?.firstname,
+          last_name: data?.lastname,
+          phone_number: data?.contactno,
+          email: data?.email,
+          password: data?.password,
+          role: 'admin',
+          country: data?.country,
+          city: data?.city
+        });
+
+        if (profileError || signUpError) {
+          toast({
+            title: 'Something Went Wrong.',
+            description: profileError?.message || signUpError?.message
+          });
+        } else {
+          toast({
+            title: 'Admin Registered Successfully.',
+            description: 'Redirecting to your Dashboard'
+          });
+          router.push('/dashboard/admins');
+        }
+
+        setLoading(false);
       }
-      // router.refresh();
-      // router.push(`/dashboard/products`);
+      router.refresh();
     } catch (error: any) {
     } finally {
       setLoading(false);
@@ -151,6 +174,24 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                     <Input
                       disabled={loading}
                       placeholder="johndoe@gmail.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      disabled={loading}
+                      placeholder="Enter your password"
                       {...field}
                     />
                   </FormControl>
