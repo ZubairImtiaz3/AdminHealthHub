@@ -27,6 +27,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from '@/components/ui/use-toast';
 import { SignUpSubmit } from '@/actions/signUp';
+import deleteUser from '@/actions/deleteUser';
+import { AlertModal } from '@/components/modal/alert-modal';
 
 interface ProfileFormType {
   initialData: any | null;
@@ -50,7 +52,16 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
   const action = initialData ? 'Save changes' : 'Create';
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema)
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstname: initialData?.profiles?.first_name || '',
+      lastname: initialData?.profiles?.last_name || '',
+      email: initialData?.profiles?.email || '',
+      contactno: initialData?.profiles?.phone_number || '',
+      country: initialData?.country || '',
+      city: initialData?.city || '',
+      admintype: initialData?.admin_type || ''
+    }
   });
 
   const {
@@ -98,13 +109,24 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
     }
   };
 
+  const adminId = params ? params.adminId : '';
+
   const onDelete = async () => {
     try {
       setLoading(true);
-      //   await axios.delete(`/api/${params.storeId}/products/${params.productId}`);
+      const { error } = await deleteUser(adminId as string);
       router.refresh();
-      router.push(`/${params.storeId}/products`);
+      router.push('/dashboard/admins');
+      toast({
+        title: 'Success',
+        description: 'Admin record successfully deleted.'
+      });
     } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'There was a problem with your request.'
+      });
     } finally {
       setLoading(false);
       setOpen(false);
@@ -118,6 +140,13 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
 
   return (
     <>
+      <AlertModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onDelete}
+        loading={loading}
+      />
+
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
         {initialData && (
@@ -261,13 +290,12 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                   <Select
                     disabled={loading}
                     onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
+                    value={field.value || initialData?.admin_type}
                   >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          defaultValue={field.value}
+                          defaultValue={initialData?.admin_type}
                           placeholder="Select Admin Type"
                         />
                       </SelectTrigger>
