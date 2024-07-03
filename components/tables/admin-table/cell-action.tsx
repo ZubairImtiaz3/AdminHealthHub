@@ -1,4 +1,5 @@
 'use client';
+import deleteUser from '@/actions/deleteUser';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/components/ui/use-toast';
 import { Admin } from '@/constants/data';
-import { createClient } from '@/utils/supabase/client';
 import { Edit, MoreHorizontal, Trash } from 'lucide-react';
 import { useRouter } from 'next-nprogress-bar';
 import { useState } from 'react';
@@ -20,7 +20,6 @@ interface CellActionProps {
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
-  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -28,15 +27,14 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onConfirm = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from('patients')
-        .delete()
-        .eq('id', data.id);
 
-      toast({
-        title: 'Success',
-        description: 'Patient record successfully deleted.'
-      });
+      const { error } = await deleteUser(data.id);
+      if (!error) {
+        toast({
+          title: 'Success',
+          description: 'Patient record successfully deleted.'
+        });
+      }
 
       router.refresh();
     } catch (error: any) {
@@ -70,7 +68,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
           <DropdownMenuItem
-            onClick={() => router.push(`/dashboard/patients/${data.id}`)}
+            onClick={() => router.push(`/dashboard/admins/${data.id}`)}
           >
             <Edit className="mr-2 h-4 w-4" /> Update
           </DropdownMenuItem>
