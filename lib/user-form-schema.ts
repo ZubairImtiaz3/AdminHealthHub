@@ -11,9 +11,9 @@ export const profileSchema = z.object({
     .string()
     .email({ message: 'Email should be valid one' }),
   contactno: z.string().min(6, { message: 'Please enter a valid phone number' }),
-  country: z.string().min(6, { message: 'Please enter a valid country' }),
-  city: z.string().min(6, { message: 'Please enter a valid city' }),
-  admintype: z.enum(['doctor', 'hospital']),
+  country: z.string().min(2, { message: 'Please enter a valid country' }),
+  city: z.string().min(2, { message: 'Please enter a valid city' }),
+  admintype: z.enum(['Doctor', 'Hospital']),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters long" })
     .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })

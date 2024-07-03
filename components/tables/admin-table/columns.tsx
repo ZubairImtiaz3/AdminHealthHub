@@ -37,6 +37,10 @@ export const columns: ColumnDef<Admin>[] = [
     header: 'PHONE NUMBER'
   },
   {
+    accessorKey: 'admin_type',
+    header: 'Admin Type'
+  },
+  {
     accessorKey: 'city',
     header: 'City'
   },

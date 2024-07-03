@@ -72,7 +72,8 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
           password: data?.password,
           role: 'admin',
           country: data?.country,
-          city: data?.city
+          city: data?.city,
+          adminType: data?.admintype
         });
 
         if (profileError || signUpError) {
@@ -111,8 +112,8 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
   };
 
   const adminTypes = [
-    { id: 'doctor', name: 'Doctor' },
-    { id: 'hospital', name: 'Hospital' }
+    { id: 'Doctor', name: 'Doctor' },
+    { id: 'Hospital', name: 'Hospital' }
   ];
 
   return (

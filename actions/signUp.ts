@@ -32,16 +32,13 @@ export const SignUpSubmit = async (SignUpData: SignUpAdmin) => {
   const adminAdditional = {
     id: userId,
     country: SignUpData.country,
-    city: SignUpData.city
+    city: SignUpData.city,
+    admin_type: SignUpData.adminType
   };
 
-  const [profileResult, adminResult] = await Promise.all([
-    supabase.from("profiles").insert(profileData).select(),
-    supabase.from("admins").insert(adminAdditional).select()
-  ]);
+  const { data: profile, error: profileError } = await supabase.from("profiles").insert(profileData).select()
 
-  const { data: profile, error: profileError } = profileResult;
-  const { data: admin, error: adminError } = adminResult;
+  const { data: admin, error: adminError } = await supabase.from("admins").insert(adminAdditional).select()
 
   return { user, signUpError, profile, profileError, admin, adminError };
 };

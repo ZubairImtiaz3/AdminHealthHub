@@ -7,4 +7,5 @@ export interface SignUpAdmin {
   role: string;
   country: string;
   city: string;
+  adminType: string;
 }
