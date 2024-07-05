@@ -25,6 +25,23 @@ export default async function Page({
     { title: 'Add', link: '/dashboard/patients/add' }
   ];
 
+  if (params.patientsId === 'new') {
+    return (
+      <ScrollArea className="h-full">
+        <div className="flex-1 space-y-4 p-5">
+          <BreadCrumb items={breadcrumbItems} />
+          <PatientsForm
+            categories={[
+              { _id: 'Male', name: 'Male' },
+              { _id: 'Female', name: 'Female' }
+            ]}
+            key={null}
+          />
+        </div>
+      </ScrollArea>
+    );
+  }
+
   const { data, error: patientError } = await supabase
     .from('patients')
     .select(
@@ -61,23 +78,6 @@ export default async function Page({
   const filteredAssocsPatients = assocsPatients.filter(
     (patient) => patient.id !== params.patientsId
   );
-
-  if (params.patientsId === 'new') {
-    return (
-      <ScrollArea className="h-full">
-        <div className="flex-1 space-y-4 p-5">
-          <BreadCrumb items={breadcrumbItems} />
-          <PatientsForm
-            categories={[
-              { _id: 'Male', name: 'Male' },
-              { _id: 'Female', name: 'Female' }
-            ]}
-            key={null}
-          />
-        </div>
-      </ScrollArea>
-    );
-  }
 
   // Render Additional Data if params.patientId is not "new"
   return (
