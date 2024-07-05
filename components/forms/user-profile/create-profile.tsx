@@ -29,6 +29,8 @@ import { toast } from '@/components/ui/use-toast';
 import { SignUpSubmit } from '@/actions/signUp';
 import deleteUser from '@/actions/deleteUser';
 import { AlertModal } from '@/components/modal/alert-modal';
+import { z } from 'zod';
+import updateUser from '@/actions/updateUser';
 
 interface ProfileFormType {
   initialData: any | null;
@@ -48,16 +50,35 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
   const description = initialData
     ? 'You can edit admin profile details.'
     : 'To create a new admin, add the following information about him.';
-  const toastMessage = initialData ? 'Product updated.' : 'Product created.';
   const action = initialData ? 'Save changes' : 'Create';
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    // Require password when creating new
+    resolver: (values, context, options) => {
+      const schemaWithRefine =
+        initialData === null
+          ? profileSchema.extend({
+              password: z
+                .string()
+                .min(8, {
+                  message: 'Password must be at least 8 characters long'
+                })
+                .regex(/[A-Z]/, {
+                  message: 'Password must contain at least one uppercase letter'
+                })
+                .regex(/[0-9]/, {
+                  message: 'Password must contain at least one number'
+                })
+            })
+          : profileSchema;
+
+      return zodResolver(schemaWithRefine)(values, context, options);
+    },
     defaultValues: {
-      firstname: initialData?.profiles?.first_name || '',
-      lastname: initialData?.profiles?.last_name || '',
+      first_name: initialData?.profiles?.first_name || '',
+      last_name: initialData?.profiles?.last_name || '',
       email: initialData?.profiles?.email || '',
-      contactno: initialData?.profiles?.phone_number || '',
+      phone_number: initialData?.profiles?.phone_number || '',
       country: initialData?.country || '',
       city: initialData?.city || '',
       admintype: initialData?.admin_type || ''
@@ -65,22 +86,67 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
   });
 
   const {
-    control,
     formState: { errors }
   } = form;
+
+  const adminId = params ? params.adminsId : '';
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       setLoading(true);
       if (initialData) {
-        // Update existing profile logic here
+        const fieldsToCompare = [
+          'first_name',
+          'last_name',
+          'phone_number',
+          'country',
+          'city'
+        ];
+
+        const compareWithInitial = fieldsToCompare.every((field) => {
+          if (field === 'country' || field === 'city') {
+            return (data as any)[field] === initialData[field];
+          } else {
+            return (data as any)[field] === initialData.profiles[field];
+          }
+        });
+
+        if (compareWithInitial) {
+          toast({
+            variant: 'destructive',
+            title: 'No changes detected.',
+            description: 'Please make changes before saving.'
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Updating existing admin
+        const { profileError, adminError } = await updateUser(
+          data,
+          adminId as string
+        );
+
+        if (profileError || adminError) {
+          toast({
+            title: 'Something Went Wrong.',
+            description: profileError || adminError
+          });
+          return;
+        }
+
+        toast({
+          title: 'Success.',
+          description: 'Admin updated successfully.'
+        });
+        router.push(`/dashboard/admins`);
       } else {
         const { profileError, signUpError } = await SignUpSubmit({
-          first_name: data?.firstname,
-          last_name: data?.lastname,
-          phone_number: data?.contactno,
+          first_name: data?.first_name,
+          last_name: data?.last_name,
+          phone_number: data?.phone_number,
           email: data?.email,
-          password: data?.password,
+          password: data?.password || '',
           role: 'admin',
           country: data?.country,
           city: data?.city,
@@ -109,14 +175,13 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
     }
   };
 
-  const adminId = params ? params.adminId : '';
-
   const onDelete = async () => {
     try {
       setLoading(true);
       const { error } = await deleteUser(adminId as string);
-      router.refresh();
+
       router.push('/dashboard/admins');
+      router.refresh();
       toast({
         title: 'Success',
         description: 'Admin record successfully deleted.'
@@ -170,30 +235,92 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
           <div className="gap-8 md:grid md:grid-cols-3">
             <FormField
               control={form.control}
-              name="firstname"
+              name="admintype"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input disabled={loading} placeholder="John" {...field} />
-                  </FormControl>
+                  <FormLabel>Admin Type</FormLabel>
+                  <Select
+                    disabled={loading || initialData?.admin_type}
+                    onValueChange={field.onChange}
+                    value={field.value || initialData?.admin_type}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          defaultValue={initialData?.admin_type}
+                          placeholder="Select Admin Type"
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {/* @ts-ignore  */}
+                      {adminTypes.map((adminTypes) => (
+                        <SelectItem key={adminTypes.id} value={adminTypes.id}>
+                          {adminTypes.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="lastname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input disabled={loading} placeholder="Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {form.watch('admintype') === 'Hospital' ? (
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hospital Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={loading}
+                        placeholder="Hospital Name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <>
+                <FormField
+                  control={form.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={loading}
+                          placeholder="John"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={loading}
+                          placeholder="Doe"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
             <FormField
               control={form.control}
               name="email"
@@ -202,7 +329,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={loading || initialData?.profiles?.email}
                       placeholder="johndoe@gmail.com"
                       {...field}
                     />
@@ -211,27 +338,29 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                 </FormItem>
               )}
             />
+            {!initialData && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        disabled={loading}
+                        placeholder="Enter your password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      disabled={loading}
-                      placeholder="Enter your password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contactno"
+              name="phone_number"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Contact Number</FormLabel>
@@ -277,38 +406,6 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="admintype"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Admin Type</FormLabel>
-                  <Select
-                    disabled={loading}
-                    onValueChange={field.onChange}
-                    value={field.value || initialData?.admin_type}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={initialData?.admin_type}
-                          placeholder="Select Admin Type"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {/* @ts-ignore  */}
-                      {adminTypes.map((adminTypes) => (
-                        <SelectItem key={adminTypes.id} value={adminTypes.id}>
-                          {adminTypes.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
