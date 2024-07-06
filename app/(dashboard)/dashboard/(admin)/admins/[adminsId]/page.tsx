@@ -46,7 +46,11 @@ export default async function Page({
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <BreadCrumb items={breadcrumbItems} />
-        <CreateProfileOne categories={[]} initialData={admin ? admin : null} />
+        <CreateProfileOne
+          disable={false}
+          categories={[]}
+          initialData={admin ? admin : null}
+        />
       </div>
     </ScrollArea>
   );

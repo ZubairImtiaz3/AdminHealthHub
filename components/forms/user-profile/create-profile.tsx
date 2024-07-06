@@ -35,19 +35,28 @@ import updateUser from '@/actions/updateUser';
 interface ProfileFormType {
   initialData: any | null;
   categories: any;
+  disable: boolean;
 }
 
 export const CreateProfileOne: React.FC<ProfileFormType> = ({
   initialData,
-  categories
+  categories,
+  disable
 }) => {
   const params = useParams();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const title = initialData ? 'Edit Profile' : 'Create Admin Profile';
-  const description = initialData
+  const title = disable
+    ? 'Your Profile'
+    : initialData
+    ? 'Edit Profile'
+    : 'Create Admin Profile';
+
+  const description = disable
+    ? 'Here are your current profile details.'
+    : initialData
     ? 'You can edit admin profile details.'
     : 'To create a new admin, add the following information about him.';
   const action = initialData ? 'Save changes' : 'Create';
@@ -214,7 +223,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
 
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
-        {initialData && (
+        {initialData && !disable && (
           <Button
             disabled={loading}
             variant="destructive"
@@ -274,7 +283,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                     <FormLabel>Hospital Name</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={loading}
+                        disabled={loading || disable}
                         placeholder="Hospital Name"
                         {...field}
                       />
@@ -293,7 +302,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={loading}
+                          disabled={loading || disable}
                           placeholder="John"
                           {...field}
                         />
@@ -310,7 +319,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={loading}
+                          disabled={loading || disable}
                           placeholder="Doe"
                           {...field}
                         />
@@ -368,7 +377,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                     <Input
                       type="number"
                       placeholder="Enter your contact number"
-                      disabled={loading}
+                      disabled={loading || disable}
                       {...field}
                     />
                   </FormControl>
@@ -384,7 +393,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                   <FormLabel>Country</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={loading || disable}
                       placeholder="Enter your country"
                       {...field}
                     />
@@ -401,7 +410,7 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
                   <FormLabel>City</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={loading}
+                      disabled={loading || disable}
                       placeholder="Enter your city"
                       {...field}
                     />
@@ -412,9 +421,11 @@ export const CreateProfileOne: React.FC<ProfileFormType> = ({
             />
           </div>
 
-          <Button disabled={loading} className="ml-auto" type="submit">
-            {action}
-          </Button>
+          {!disable && (
+            <Button disabled={loading} className="ml-auto" type="submit">
+              {action}
+            </Button>
+          )}
         </form>
       </Form>
     </>
