@@ -44,6 +44,7 @@ interface PatientsFormProps {
 interface ReportData {
   title: string;
   description: string;
+  link: string;
 }
 
 export const ReportsForm: React.FC<PatientsFormProps> = () => {
@@ -59,7 +60,6 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const [errorFetch, setErrorFetch] = useState<any>(null);
   const title = initialData ? 'Edit report' : 'Add report';
   const description = initialData ? 'Edit a report.' : 'Add a new report';
-  const toastMessage = initialData ? 'Report updated.' : 'Report created.';
   const action = initialData ? 'Save changes' : 'Create';
 
   useEffect(() => {
@@ -74,7 +74,8 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
         if (data) {
           setInitialData({
             title: data.report_title,
-            description: data.report_description
+            description: data.report_description,
+            link: data.report_link
           });
         } else if (error) {
           setErrorFetch(error.message);
@@ -225,12 +226,26 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   };
 
   const onDelete = async () => {
+    const report = initialData ? initialData.link : '';
+
+    // Extract the file path from the URL
+    const filePath = report.split('/storage/v1/object/public/reports/')[1];
+
     try {
       setLoading(true);
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('reports')
         .delete()
         .eq('id', params.reportsId);
+
+      if (dbError) throw dbError;
+
+      // Delete the file from storage
+      const { data, error: storageError } = await supabase.storage
+        .from('reports')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
 
       router.back();
       router.refresh();

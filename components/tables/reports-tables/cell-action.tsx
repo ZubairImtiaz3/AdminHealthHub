@@ -26,13 +26,26 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const router = useRouter();
 
   const onConfirm = async () => {
+    const report = data ? data.report_link : '';
+
+    // Extract the file path from the URL
+    const filePath = report.split('/storage/v1/object/public/reports/')[1];
     try {
       setLoading(true);
 
-      const { error } = await supabase
+      const { error: dbError } = await supabase
         .from('reports')
         .delete()
         .eq('id', data.id);
+
+      if (dbError) throw dbError;
+
+      // Delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('reports')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
 
       toast({
         title: 'Success',
