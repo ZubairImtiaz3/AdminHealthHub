@@ -61,6 +61,7 @@ export default function UserAuthForm() {
       router.push('/dashboard');
     } else {
       await signOut(); // Removing cookies to protect dashboard.
+      router.push('/');
       toast({
         title: 'Something Went Wrong.',
         description:

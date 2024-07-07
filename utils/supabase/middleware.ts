@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { format, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import signOut from '@/actions/signOut';
 
 const today = startOfDay(new Date());
 const fromDate = format(startOfMonth(today), 'yyyy-MM-dd');
@@ -102,6 +103,14 @@ export async function updateSession(request: NextRequest) {
 
   // Restrict routes based on role
   if (
+    role?.role === 'user' &&
+    request.nextUrl.pathname.startsWith('/dashboard')
+  ) {
+    await signOut();
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (
     role?.role === 'admin' &&
     request.nextUrl.pathname.startsWith('/dashboard/admins')
   ) {
@@ -118,6 +127,13 @@ export async function updateSession(request: NextRequest) {
     )
   ) {
     return NextResponse.redirect(new URL('/dashboard/admins', request.url));
+  }
+
+  if (request.nextUrl.pathname === '/reset-password') {
+    const token = request.nextUrl.searchParams.get('code');
+    if (!token) {
+      return NextResponse.redirect(new URL('/forgot-password', request.url));
+    }
   }
 
   return response;
