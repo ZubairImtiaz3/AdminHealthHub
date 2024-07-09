@@ -1,5 +1,5 @@
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
-import { Overview } from '@/components/overview';
+import Overview from '@/components/overview';
 import { RecentPatients } from '@/components/recent-patients';
 import {
   Card,
@@ -222,7 +222,7 @@ export default async function page({
               <CardTitle>Overview</CardTitle>
             </CardHeader>
             <CardContent className="pl-2">
-              <Overview />
+              <Overview patients={patientsWithReports} />
             </CardContent>
           </Card>
           <Card className="col-span-4 md:col-span-3">

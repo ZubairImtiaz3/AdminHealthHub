@@ -1,59 +1,54 @@
 'use client';
-
+import React from 'react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-const data = [
-  {
-    name: 'Jan',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Feb',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Mar',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Apr',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'May',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Jun',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Jul',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Aug',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Sep',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Oct',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Nov',
-    total: Math.floor(Math.random() * 5000) + 1000
-  },
-  {
-    name: 'Dec',
-    total: Math.floor(Math.random() * 5000) + 1000
-  }
-];
+interface Patient {
+  id: string;
+  user_id: null;
+  first_name: string;
+  last_name: string;
+  created_at: string;
+  phone_number: string;
+  admin_id: string;
+  gender: string;
+  reports: [];
+}
 
-export function Overview() {
+// Function to process patients data and count patients per month
+function processPatientsData(patients: Patient[]) {
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
+
+  const monthlyPatientCounts = Array(12).fill(0);
+
+  patients?.forEach((patient: Patient) => {
+    const createdAt = new Date(patient.created_at);
+    const month = createdAt.getMonth();
+    monthlyPatientCounts[month]++;
+  });
+
+  return monthNames.map((name, index) => ({
+    name,
+    total: monthlyPatientCounts[index]
+  }));
+}
+
+// Overview component to display patient data bar chart
+const Overview: React.FC<{ patients: Patient[] }> = ({ patients }) => {
+  const data = processPatientsData(patients);
+
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>
@@ -75,4 +70,6 @@ export function Overview() {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+};
+
+export default Overview;
