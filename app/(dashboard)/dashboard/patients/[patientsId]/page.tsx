@@ -66,19 +66,44 @@ export default async function Page({
 
   const patientsReports = patient.reports;
   const patientUserId = patient.user_id;
+  const patientPhoneNumber = patient.phone_number;
 
-  const { data: assocsPatient, error: assocsPatientError } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('user_id', patientUserId);
+  const {
+    data: associatedPatientsByUserId,
+    error: associatedPatientsByUserIdError
+  } = await supabase.from('patients').select('*').eq('user_id', patientUserId);
 
-  const assocsPatients = assocsPatient ? assocsPatient : [];
+  const associationListByUserId = associatedPatientsByUserId
+    ? associatedPatientsByUserId
+    : [];
 
-  // Remove the object with id of params.patientsId from assocsPatients array
-  const filteredAssocsPatients = assocsPatients.filter(
+  // Remove the object with id of params.patientsId from associationListByUserId array
+  const filteredAssociationsByUserId = associationListByUserId.filter(
     (patient) => patient.id !== params.patientsId
   );
 
+  const {
+    data: associatedPatientsByPhoneNumber,
+    error: associatedPatientsByPhoneNumberError
+  } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('phone_number', patientPhoneNumber);
+
+  const associationListByPhoneNumber = associatedPatientsByPhoneNumber
+    ? associatedPatientsByPhoneNumber
+    : [];
+
+  // Remove the object with id of params.patientsId from associationListByPhoneNumber array
+  const filteredAssociationsByPhoneNumber = associationListByPhoneNumber.filter(
+    (patient) => patient.id !== params.patientsId
+  );
+
+  // Merge the filtered arrays
+  const mergedFilteredAssociations = [
+    ...filteredAssociationsByUserId,
+    ...filteredAssociationsByPhoneNumber
+  ];
   // Render Additional Data if params.patientId is not "new"
   return (
     <ScrollArea className="h-full">
@@ -103,7 +128,7 @@ export default async function Page({
 
         <div className="flex items-start justify-between pt-10">
           <Heading
-            title={`Associated Patients (${filteredAssocsPatients.length})`}
+            title={`Associated Patients (${mergedFilteredAssociations.length})`}
             description="Relationships Of Patient"
           />
         </div>
@@ -111,7 +136,7 @@ export default async function Page({
         <DataTable
           searchKey="NAME"
           columns={assocColumns}
-          data={filteredAssocsPatients}
+          data={mergedFilteredAssociations}
         />
       </div>
     </ScrollArea>
