@@ -9,11 +9,14 @@ export default async function page() {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  const { data, error } = await supabase.from('admins').select(
-    `*, 
+  const { data, error } = await supabase
+    .from('admins')
+    .select(
+      `*, 
         profiles (*)
       `
-  );
+    )
+    .single();
 
   return (
     <ScrollArea className="h-full">
