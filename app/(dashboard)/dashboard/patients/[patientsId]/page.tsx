@@ -11,6 +11,7 @@ import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import _ from 'lodash';
 import { columns } from '@/components/tables/patient-report-table/columns';
+import { mergeAndRemoveDuplicates } from '@/utils/client/basicUtlis';
 
 export default async function Page({
   params
@@ -99,11 +100,13 @@ export default async function Page({
     (patient) => patient.id !== params.patientsId
   );
 
-  // Merge the filtered arrays
-  const mergedFilteredAssociations = [
-    ...filteredAssociationsByUserId,
-    ...filteredAssociationsByPhoneNumber
-  ];
+  // Merge and remove duplicate in the filtered arrays
+  const mergedFilteredAssociations = mergeAndRemoveDuplicates(
+    filteredAssociationsByUserId,
+    filteredAssociationsByPhoneNumber,
+    'id'
+  );
+
   // Render Additional Data if params.patientId is not "new"
   return (
     <ScrollArea className="h-full">
