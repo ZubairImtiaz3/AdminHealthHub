@@ -158,57 +158,6 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
     try {
       setLoading(true);
 
-      const { data: patientData, error } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId);
-      const patient = patientData ? patientData : [];
-
-      const { data: reportData } = await supabase
-        .from('reports')
-        .select(
-          `*, 
-      patients (*)
-    `
-        )
-        .eq('id', reportVaraible)
-        .single();
-
-      // logic to generate the link for report
-      const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
-      const pdfBlob = await convertImagesToPDF(data.files);
-      const pdfFileName = `${
-        reportVaraible !== null
-          ? reportData.patients.first_name
-          : patient[0].first_name
-      }_${
-        reportVaraible !== null
-          ? reportData.patients.last_name
-          : patient[0].last_name
-      }_${currentDateTime}.pdf`;
-      const pdfFile = new File([pdfBlob], pdfFileName, {
-        type: 'application/pdf'
-      });
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('reports')
-        .upload(`public/${pdfFile.name}`, pdfFile);
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError);
-        throw uploadError;
-      }
-
-      const {
-        data: { publicUrl }
-      } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-      const fileLink = publicUrl;
-
-      console.log(reportData);
-
-      const redirectionId = reportData ? reportData?.patient_id : '';
-
       if (initialData) {
         if (
           data.title === initialData.title &&
@@ -222,6 +171,46 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           });
           return;
         }
+
+        const { data: reportData } = await supabase
+          .from('reports')
+          .select(
+            `*, 
+      patients (*)
+    `
+          )
+          .eq('id', reportVaraible)
+          .single();
+
+        // Logic to generate new link for exsiting report
+        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+        const pdfBlob = await convertImagesToPDF(data.files);
+        const pdfFileName = `${reportData.patients.first_name}_${reportData.patients.last_name}_${currentDateTime}.pdf`;
+        const pdfFile = new File([pdfBlob], pdfFileName, {
+          type: 'application/pdf'
+        });
+
+        const OldfilePath = initialData.report_link.split(
+          '/storage/v1/object/public/reports/'
+        )[1];
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('reports')
+          .update(OldfilePath, pdfFile);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        const newFilePath = uploadData ? uploadData.path : '';
+
+        const {
+          data: { publicUrl }
+        } = supabase.storage.from('reports').getPublicUrl(newFilePath);
+
+        const fileLink = publicUrl;
+        const redirectionId = reportData ? reportData?.patient_id : '';
 
         // if data different then, Update report logic
         const { data: updateData, error: updateError } = await supabase
@@ -254,11 +243,42 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           return;
         }
 
+        const { data: patientData, error } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', patientId)
+          .single();
+
+        const patient = patientData ? patientData : {};
+
+        // Logic to generate new link for exsiting report
+        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+        const pdfBlob = await convertImagesToPDF(data.files);
+        const pdfFileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}.pdf`;
+        const pdfFile = new File([pdfBlob], pdfFileName, {
+          type: 'application/pdf'
+        });
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('reports')
+          .upload(`public/${pdfFile.name}`, pdfFile);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        const {
+          data: { publicUrl }
+        } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+        const fileLink = publicUrl;
+
         const { data: reportData, error: reportError } = await supabase
           .from('reports')
           .insert([
             {
-              user_id: patient[0].user_id,
+              user_id: patient.user_id,
               patient_id: patientId,
               report_title: data.title,
               report_description: data.description,
@@ -437,7 +457,11 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
               )}
             />
           </div>
-          <div className="m-auto flex max-w-max items-center gap-6">
+          <div
+            className={
+              !showUploader ? 'm-auto flex max-w-max items-center gap-6' : ''
+            }
+          >
             <div>
               {/* File uploader */}
               <Controller
@@ -453,7 +477,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
                         />
                       ) : (
                         <Button onClick={handleButtonClick}>
-                          Change The Report
+                          Update Existing Report
                         </Button>
                       )}
                     </FormControl>
@@ -462,7 +486,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
                 )}
               />
             </div>
-            {initialData?.report_link && (
+            {initialData?.report_link && !showUploader && (
               <div>
                 <ReportLinkCell
                   reportLink={initialData?.report_link as string}
