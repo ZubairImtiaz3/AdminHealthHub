@@ -162,13 +162,30 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
         .from('patients')
         .select('*')
         .eq('id', patientId);
-
       const patient = patientData ? patientData : [];
+
+      const { data: reportData } = await supabase
+        .from('reports')
+        .select(
+          `*, 
+      patients (*)
+    `
+        )
+        .eq('id', reportVaraible)
+        .single();
 
       // logic to generate the link for report
       const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
       const pdfBlob = await convertImagesToPDF(data.files);
-      const pdfFileName = `${patient[0]?.first_name}_${patient[0]?.last_name}_${currentDateTime}.pdf`;
+      const pdfFileName = `${
+        reportVaraible !== null
+          ? reportData.patients.first_name
+          : patient[0].first_name
+      }_${
+        reportVaraible !== null
+          ? reportData.patients.last_name
+          : patient[0].last_name
+      }_${currentDateTime}.pdf`;
       const pdfFile = new File([pdfBlob], pdfFileName, {
         type: 'application/pdf'
       });
@@ -188,11 +205,8 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
 
       const fileLink = publicUrl;
 
-      const { data: reportData } = await supabase
-        .from('reports')
-        .select()
-        .eq('id', reportVaraible)
-        .single();
+      console.log(reportData);
+
       const redirectionId = reportData ? reportData?.patient_id : '';
 
       if (initialData) {
