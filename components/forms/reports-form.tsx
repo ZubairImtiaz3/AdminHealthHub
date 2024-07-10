@@ -44,7 +44,8 @@ interface PatientsFormProps {
 interface ReportData {
   title: string;
   description: string;
-  link: string;
+  report_link: string;
+  report_id: string;
 }
 
 export const ReportsForm: React.FC<PatientsFormProps> = () => {
@@ -58,9 +59,19 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const [initialData, setInitialData] = useState<ReportData | null>(null);
   const [fetching, setFetching] = useState(true);
   const [errorFetch, setErrorFetch] = useState<any>(null);
+  const [showUploader, setShowUploader] = useState(true);
   const title = initialData ? 'Edit report' : 'Add report';
   const description = initialData ? 'Edit a report.' : 'Add a new report';
   const action = initialData ? 'Save changes' : 'Create';
+
+  // Extract the `id` from query parameter
+  const patientVariable = searchParams.get('id');
+  const reportVariable = params.reportsId;
+
+  // Set `patientVariable` and `reportVariable`
+  const isNewIdPresent = !!patientVariable;
+  const patientVaraible = isNewIdPresent ? patientVariable : null;
+  const reportVaraible = isNewIdPresent ? null : reportVariable;
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -75,8 +86,10 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           setInitialData({
             title: data.report_title,
             description: data.report_description,
-            link: data.report_link
+            report_link: data.report_link,
+            report_id: data.id
           });
+          setShowUploader(false);
         } else if (error) {
           setErrorFetch(error.message);
         }
@@ -108,91 +121,164 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
     }
   }, [initialData, form]);
 
-  const patientId = searchParams.get('id');
+  // Function to convert images to a single PDF
+  const convertImagesToPDF = async (files: File[]) => {
+    const pdfDoc = await PDFDocument.create();
 
-  const onSubmit = async (data: PatientsFormValues) => {
-    if (data.files.length === 0) {
-      toast({
-        title: 'Upload Report',
-        description: 'At least one report needs to be added'
+    for (const file of files) {
+      const imgBuffer = await file.arrayBuffer();
+
+      let img;
+      if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        img = await pdfDoc.embedJpg(imgBuffer);
+      } else if (file.type === 'image/png') {
+        img = await pdfDoc.embedPng(imgBuffer);
+      } else {
+        throw new Error(`Unsupported file type: ${file.type}`);
+      }
+
+      const page = pdfDoc.addPage([img.width, img.height]);
+      page.drawImage(img, {
+        x: 0,
+        y: 0,
+        width: img.width,
+        height: img.height
       });
-      return;
     }
 
+    const pdfBytes = await pdfDoc.save();
+    return new Blob([pdfBytes], { type: 'application/pdf' });
+  };
+
+  // to get the patient id
+  const patientId = searchParams.get('id');
+
+  // onSubmit function
+  const onSubmit = async (data: PatientsFormValues) => {
     try {
       setLoading(true);
 
-      const { data: patientData, error } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('id', patientId);
-
-      let fileLink;
-      const patient = patientData ? patientData : [];
-
-      // Convert images to a single PDF
-      const pdfDoc = await PDFDocument.create();
-
-      for (const file of data.files) {
-        const imgBuffer = await file.arrayBuffer();
-
-        try {
-          let img;
-          if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-            img = await pdfDoc.embedJpg(imgBuffer);
-          } else if (file.type === 'image/png') {
-            img = await pdfDoc.embedPng(imgBuffer);
-          } else {
-            throw new Error(`Unsupported file type: ${file.type}`);
-          }
-
-          const page = pdfDoc.addPage([img.width, img.height]);
-          page.drawImage(img, {
-            x: 0,
-            y: 0,
-            width: img.width,
-            height: img.height
-          });
-        } catch (embedError) {
-          console.error(
-            `Error embedding image for file: ${file.name}`,
-            embedError
-          );
-          throw embedError;
-        }
-      }
-
-      const pdfBytes = await pdfDoc.save();
-      const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
-      const pdfFileName = `${patient[0].first_name}_${patient[0].last_name}_${currentDateTime}.pdf`;
-      const pdfFile = new File([pdfBlob], pdfFileName, {
-        type: 'application/pdf'
-      });
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('reports')
-        .upload(`public/${pdfFile.name}`, pdfFile);
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError);
-        throw uploadError;
-      }
-
-      const {
-        data: { publicUrl }
-      } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-      fileLink = publicUrl;
-
       if (initialData) {
-        // Update existing report logic
+        if (
+          data.title === initialData.title &&
+          data.description === initialData.description &&
+          data.files.length === 0
+        ) {
+          toast({
+            title: 'No Changes Detected',
+            description:
+              'The data you entered is the same as the existing data.'
+          });
+          return;
+        }
+
+        const { data: reportData } = await supabase
+          .from('reports')
+          .select(
+            `*, 
+      patients (*)
+    `
+          )
+          .eq('id', reportVaraible)
+          .single();
+
+        // Logic to generate new link for exsiting report
+        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+        const pdfBlob = await convertImagesToPDF(data.files);
+        const pdfFileName = `${reportData.patients.first_name}_${reportData.patients.last_name}_${currentDateTime}.pdf`;
+        const pdfFile = new File([pdfBlob], pdfFileName, {
+          type: 'application/pdf'
+        });
+
+        const OldfilePath = initialData.report_link.split(
+          '/storage/v1/object/public/reports/'
+        )[1];
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('reports')
+          .update(OldfilePath, pdfFile);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        const newFilePath = uploadData ? uploadData.path : '';
+
+        const {
+          data: { publicUrl }
+        } = supabase.storage.from('reports').getPublicUrl(newFilePath);
+
+        const fileLink = publicUrl;
+        const redirectionId = reportData ? reportData?.patient_id : '';
+
+        // if data different then, Update report logic
+        const { data: updateData, error: updateError } = await supabase
+          .from('reports')
+          .update({
+            report_title: data.title,
+            report_description: data.description,
+            report_link: fileLink
+          })
+          .eq('id', initialData.report_id);
+
+        toast({
+          title: 'Success',
+          description: 'Your report has been successfully updated.'
+        });
+
+        if (updateError) {
+          console.error('Error updating report:', updateError);
+          throw updateError;
+        }
+        router.refresh();
+        router.push(`/dashboard/patients/${redirectionId}`);
       } else {
+        // Insert new report logic
+        if (data.files.length === 0) {
+          toast({
+            title: 'Upload Report',
+            description: 'At least one report needs to be added'
+          });
+          return;
+        }
+
+        const { data: patientData, error } = await supabase
+          .from('patients')
+          .select('*')
+          .eq('id', patientId)
+          .single();
+
+        const patient = patientData ? patientData : {};
+
+        // Logic to generate new link for exsiting report
+        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+        const pdfBlob = await convertImagesToPDF(data.files);
+        const pdfFileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}.pdf`;
+        const pdfFile = new File([pdfBlob], pdfFileName, {
+          type: 'application/pdf'
+        });
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('reports')
+          .upload(`public/${pdfFile.name}`, pdfFile);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        const {
+          data: { publicUrl }
+        } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+        const fileLink = publicUrl;
+
         const { data: reportData, error: reportError } = await supabase
           .from('reports')
           .insert([
             {
-              user_id: patient[0].user_id,
+              user_id: patient.user_id,
               patient_id: patientId,
               report_title: data.title,
               report_description: data.description,
@@ -201,18 +287,17 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           ])
           .select();
 
+        toast({
+          title: 'Success',
+          description: 'Your report has been successfully submitted.'
+        });
         if (reportError) {
           console.error('Error inserting report:', reportError);
           throw reportError;
         }
+        router.refresh();
+        router.push(`/dashboard/patients/${patientVaraible}`);
       }
-
-      toast({
-        title: 'Success',
-        description: 'Your report has been successfully submitted.'
-      });
-      router.refresh();
-      router.push(`/dashboard/patients/${patientId}`);
     } catch (error: any) {
       console.error('An error occurred:', error);
       toast({
@@ -226,7 +311,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   };
 
   const onDelete = async () => {
-    const report = initialData ? initialData.link : '';
+    const report = initialData ? initialData.report_link : '';
 
     // Extract the file path from the URL
     const filePath = report.split('/storage/v1/object/public/reports/')[1];
@@ -283,6 +368,29 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
       </div>
     );
   }
+
+  const ReportLinkCell = ({ reportLink }: { reportLink: string }) => {
+    const handleClick = (
+      event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    ) => {
+      event.preventDefault();
+      const url =
+        reportLink.startsWith('http://') || reportLink.startsWith('https://')
+          ? reportLink
+          : `https://${reportLink}`;
+      window.open(url, '_blank');
+    };
+
+    return (
+      <Button className="p-auto ml-auto" onClick={handleClick}>
+        View Existing Report
+      </Button>
+    );
+  };
+
+  const handleButtonClick = () => {
+    setShowUploader(true);
+  };
 
   return (
     <>
@@ -349,22 +457,43 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
               )}
             />
           </div>
-          {/* file uploader */}
-          <Controller
-            control={form.control}
-            name="files"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ReportUploader
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div
+            className={
+              !showUploader ? 'm-auto flex max-w-max items-center gap-6' : ''
+            }
+          >
+            <div>
+              {/* File uploader */}
+              <Controller
+                control={form.control}
+                name="files"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      {showUploader ? (
+                        <ReportUploader
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
+                      ) : (
+                        <Button onClick={handleButtonClick}>
+                          Update Existing Report
+                        </Button>
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {initialData?.report_link && !showUploader && (
+              <div>
+                <ReportLinkCell
+                  reportLink={initialData?.report_link as string}
+                />
+              </div>
             )}
-          />
+          </div>
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>
