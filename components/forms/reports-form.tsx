@@ -243,6 +243,20 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           return;
         }
 
+        if (
+          (data.files[0].type === 'application/msword' ||
+            data.files[0].type === 'application/pdf' ||
+            data.files[0].type ===
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document') &&
+          data.files.length > 1
+        ) {
+          toast({
+            title: 'Attention',
+            description: 'No more than one doc or pdf file is allowed'
+          });
+          return;
+        }
+
         const { data: patientData, error } = await supabase
           .from('patients')
           .select('*')
@@ -251,28 +265,79 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
 
         const patient = patientData ? patientData : {};
 
-        // Logic to generate new link for exsiting report
-        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
-        const pdfBlob = await convertImagesToPDF(data.files);
-        const pdfFileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}.pdf`;
-        const pdfFile = new File([pdfBlob], pdfFileName, {
-          type: 'application/pdf'
-        });
+        let fileLink;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('reports')
-          .upload(`public/${pdfFile.name}`, pdfFile);
+        if (
+          data.files[0].type === 'application/msword' ||
+          data.files[0].type ===
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ) {
+          const currentDateTime = new Date()
+            .toISOString()
+            .replace(/[:.-]/g, '_');
+          const fileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}`;
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from('reports')
+              .upload(`public/${fileName}`, data.files[0]);
 
-        if (uploadError) {
-          console.error('Error uploading file:', uploadError);
-          throw uploadError;
+          if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            throw uploadError;
+          }
+
+          const {
+            data: { publicUrl }
+          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+          fileLink = publicUrl;
+        } else if (data.files[0].type === 'application/pdf') {
+          const currentDateTime = new Date()
+            .toISOString()
+            .replace(/[:.-]/g, '_');
+          const fileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}`;
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from('reports')
+              .upload(`public/${fileName}`, data.files[0]);
+
+          if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            throw uploadError;
+          }
+
+          const {
+            data: { publicUrl }
+          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+          fileLink = publicUrl;
+        } else {
+          // Logic to generate new link for exsiting report
+          const currentDateTime = new Date()
+            .toISOString()
+            .replace(/[:.-]/g, '_');
+          const pdfBlob = await convertImagesToPDF(data.files);
+          const pdfFileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}.pdf`;
+          const pdfFile = new File([pdfBlob], pdfFileName, {
+            type: 'application/pdf'
+          });
+
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from('reports')
+              .upload(`public/${pdfFile.name}`, pdfFile);
+
+          if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            throw uploadError;
+          }
+
+          const {
+            data: { publicUrl }
+          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+          fileLink = publicUrl;
         }
-
-        const {
-          data: { publicUrl }
-        } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-        const fileLink = publicUrl;
 
         const { data: reportData, error: reportError } = await supabase
           .from('reports')

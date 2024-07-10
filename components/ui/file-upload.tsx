@@ -78,7 +78,10 @@ export const FileUploader = forwardRef<
     const {
       accept = {
         'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
-        'application/pdf': ['.pdf']
+        'application/pdf': ['.pdf'],
+        'application/msword': ['.doc'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+          ['docx']
       },
       maxFiles = 1,
       maxSize = 4 * 1024 * 1024,
