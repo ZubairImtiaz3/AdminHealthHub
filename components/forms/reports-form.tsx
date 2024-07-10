@@ -59,9 +59,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const [initialData, setInitialData] = useState<ReportData | null>(null);
   const [fetching, setFetching] = useState(true);
   const [errorFetch, setErrorFetch] = useState<any>(null);
-  const [showUploader, setShowUploader] = useState(
-    initialData === null ? true : false
-  );
+  const [showUploader, setShowUploader] = useState(true);
   const title = initialData ? 'Edit report' : 'Add report';
   const description = initialData ? 'Edit a report.' : 'Add a new report';
   const action = initialData ? 'Save changes' : 'Create';
@@ -84,6 +82,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
             report_link: data.report_link,
             report_id: data.id
           });
+          setShowUploader(false);
         } else if (error) {
           setErrorFetch(error.message);
         }
@@ -114,10 +113,6 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
       form.reset(initialData);
     }
   }, [initialData, form]);
-
-  // useEffect(() => {
-  //   setShowUploader(initialData === null);
-  // }, [initialData]);
 
   // Function to convert images to a single PDF
   const convertImagesToPDF = async (files: File[]) => {
@@ -153,7 +148,6 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
 
   // onSubmit function
   const onSubmit = async (data: PatientsFormValues) => {
-    console.log('btn hit');
     try {
       setLoading(true);
 
@@ -228,6 +222,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           throw updateError;
         }
       } else {
+        console.log('id in else', redirectionId);
         // Insert new report logic
         if (data.files.length === 0) {
           toast({
@@ -259,8 +254,9 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           throw reportError;
         }
       }
-      router.refresh();
-      router.push(`/dashboard/patients/${redirectionId}`);
+      console.log('id out else', redirectionId);
+      // router.refresh();
+      // router.push(`/dashboard/patients/${redirectionId}`);
     } catch (error: any) {
       console.error('An error occurred:', error);
       toast({
@@ -422,28 +418,28 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           </div>
           <div className="m-auto flex max-w-max items-center gap-6">
             <div>
-              {/* file uploader */}
-              {showUploader ? (
-                <Controller
-                  control={form.control}
-                  name="files"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
+              {/* File uploader */}
+              <Controller
+                control={form.control}
+                name="files"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      {showUploader ? (
                         <ReportUploader
                           value={field.value}
                           onValueChange={field.onChange}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <Button className="p-auto ml-auto" onClick={handleButtonClick}>
-                  Change The Report
-                </Button>
-              )}
+                      ) : (
+                        <Button onClick={handleButtonClick}>
+                          Change The Report
+                        </Button>
+                      )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             {initialData?.report_link && (
               <div>
