@@ -64,7 +64,14 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const description = initialData ? 'Edit a report.' : 'Add a new report';
   const action = initialData ? 'Save changes' : 'Create';
 
-  const reportId = params ? params.reportsId : null;
+  // Extract the `id` from query parameter
+  const patientVariable = searchParams.get('id');
+  const reportVariable = params.reportsId;
+
+  // Set `patientVariable` and `reportVariable`
+  const isNewIdPresent = !!patientVariable;
+  const patientVaraible = isNewIdPresent ? patientVariable : null;
+  const reportVaraible = isNewIdPresent ? null : reportVariable;
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -184,7 +191,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
       const { data: reportData } = await supabase
         .from('reports')
         .select()
-        .eq('id', reportId)
+        .eq('id', reportVaraible)
         .single();
       const redirectionId = reportData ? reportData?.patient_id : '';
 
@@ -221,8 +228,9 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           console.error('Error updating report:', updateError);
           throw updateError;
         }
+        router.refresh();
+        router.push(`/dashboard/patients/${redirectionId}`);
       } else {
-        console.log('id in else', redirectionId);
         // Insert new report logic
         if (data.files.length === 0) {
           toast({
@@ -253,10 +261,9 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           console.error('Error inserting report:', reportError);
           throw reportError;
         }
+        router.refresh();
+        router.push(`/dashboard/patients/${patientVaraible}`);
       }
-      console.log('id out else', redirectionId);
-      // router.refresh();
-      // router.push(`/dashboard/patients/${redirectionId}`);
     } catch (error: any) {
       console.error('An error occurred:', error);
       toast({
