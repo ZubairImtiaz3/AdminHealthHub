@@ -44,7 +44,7 @@ interface PatientsFormProps {
 interface ReportData {
   title: string;
   description: string;
-  link: string;
+  report_link: string;
 }
 
 export const ReportsForm: React.FC<PatientsFormProps> = () => {
@@ -75,7 +75,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           setInitialData({
             title: data.report_title,
             description: data.report_description,
-            link: data.report_link
+            report_link: data.report_link
           });
         } else if (error) {
           setErrorFetch(error.message);
@@ -226,7 +226,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   };
 
   const onDelete = async () => {
-    const report = initialData ? initialData.link : '';
+    const report = initialData ? initialData.report_link : '';
 
     // Extract the file path from the URL
     const filePath = report.split('/storage/v1/object/public/reports/')[1];
@@ -283,6 +283,25 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
       </div>
     );
   }
+
+  const ReportLinkCell = ({ reportLink }: { reportLink: string }) => {
+    const handleClick = (
+      event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    ) => {
+      event.preventDefault();
+      const url =
+        reportLink.startsWith('http://') || reportLink.startsWith('https://')
+          ? reportLink
+          : `https://${reportLink}`;
+      window.open(url, '_blank');
+    };
+
+    return (
+      <Button className="p-auto ml-auto" onClick={handleClick}>
+        View Existing Report
+      </Button>
+    );
+  };
 
   return (
     <>
@@ -349,22 +368,33 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
               )}
             />
           </div>
-          {/* file uploader */}
-          <Controller
-            control={form.control}
-            name="files"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ReportUploader
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="m-auto flex max-w-max items-center gap-8">
+            <div>
+              {/* file uploader */}
+              <Controller
+                control={form.control}
+                name="files"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <ReportUploader
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {initialData?.report_link && (
+              <div>
+                <ReportLinkCell
+                  reportLink={initialData?.report_link as string}
+                />
+              </div>
             )}
-          />
+          </div>
           <Button disabled={loading} className="ml-auto" type="submit">
             {action}
           </Button>
