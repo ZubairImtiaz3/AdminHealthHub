@@ -46,6 +46,7 @@ interface ReportData {
   description: string;
   report_link: string;
   report_id: string;
+  patient_id: string;
 }
 
 export const ReportsForm: React.FC<PatientsFormProps> = () => {
@@ -65,13 +66,7 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
   const action = initialData ? 'Save changes' : 'Create';
 
   // Extract the `id` from query parameter
-  const patientVariable = searchParams.get('id');
-  const reportVariable = params.reportsId;
-
-  // Set `patientVariable` and `reportVariable`
-  const isNewIdPresent = !!patientVariable;
-  const patientVaraible = isNewIdPresent ? patientVariable : null;
-  const reportVaraible = isNewIdPresent ? null : reportVariable;
+  const patientId = searchParams.get('id');
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -87,7 +82,8 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
             title: data.report_title,
             description: data.report_description,
             report_link: data.report_link,
-            report_id: data.id
+            report_id: data.id,
+            patient_id: data.patient_id
           });
           setShowUploader(false);
         } else if (error) {
@@ -150,69 +146,118 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
     return new Blob([pdfBytes], { type: 'application/pdf' });
   };
 
-  // to get the patient id
-  const patientId = searchParams.get('id');
+  // FileUpload function
+  const handleFileUpload = async (
+    file: File,
+    initialFilePath?: string
+  ): Promise<string> => {
+    const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+    const fileName = `file_${currentDateTime}`;
 
-  // onSubmit function
-  const onSubmit = async (data: PatientsFormValues) => {
+    const { data: uploadData, error: uploadError } = initialFilePath
+      ? await supabase.storage.from('reports').update(initialFilePath, file)
+      : await supabase.storage
+          .from('reports')
+          .upload(`public/${fileName}`, file);
+
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      throw uploadError;
+    }
+
+    const {
+      data: { publicUrl }
+    } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
+
+    return publicUrl;
+  };
+
+  const handlePdfGenerationAndUpload = async (
+    files: File[],
+    initialFilePath?: string
+  ): Promise<string> => {
+    const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
+    const pdfBlob = await convertImagesToPDF(files);
+
+    // Todo: Add patient name in file
+    const pdfFileName = `file_${currentDateTime}.pdf`;
+    
+    const pdfFile = new File([pdfBlob], pdfFileName, {
+      type: 'application/pdf'
+    });
+
+    return handleFileUpload(pdfFile, initialFilePath);
+  };
+
+  const validateFileUpload = (files: File[]) => {
+    const allowedTypes = [
+      'application/msword',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (files.length > 1 && allowedTypes.includes(files[0].type)) {
+      toast({
+        title: 'Attention',
+        description: 'No more than one doc or pdf file is allowed'
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (
+    data: PatientsFormValues,
+    initialData?: any,
+    patientId?: string
+  ) => {
     try {
       setLoading(true);
 
-      if (initialData) {
-        if (
-          data.title === initialData.title &&
-          data.description === initialData.description &&
-          data.files.length === 0
-        ) {
-          toast({
-            title: 'No Changes Detected',
-            description:
-              'The data you entered is the same as the existing data.'
-          });
-          return;
-        }
+      if (!validateFileUpload(data.files)) {
+        return;
+      }
 
-        const { data: reportData } = await supabase
-          .from('reports')
-          .select(
-            `*, 
-      patients (*)
-    `
-          )
-          .eq('id', reportVaraible)
-          .single();
-
-        // Logic to generate new link for exsiting report
-        const currentDateTime = new Date().toISOString().replace(/[:.-]/g, '_');
-        const pdfBlob = await convertImagesToPDF(data.files);
-        const pdfFileName = `${reportData.patients.first_name}_${reportData.patients.last_name}_${currentDateTime}.pdf`;
-        const pdfFile = new File([pdfBlob], pdfFileName, {
-          type: 'application/pdf'
+      if (
+        initialData &&
+        data.title === initialData.title &&
+        data.description === initialData.description &&
+        data.files.length === 0
+      ) {
+        toast({
+          title: 'No Changes Detected',
+          description: 'The data you entered is the same as the existing data.'
         });
+        return;
+      }
 
-        const OldfilePath = initialData.report_link.split(
-          '/storage/v1/object/public/reports/'
-        )[1];
+      let fileLink = initialData?.report_link || '';
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('reports')
-          .update(OldfilePath, pdfFile);
-
-        if (uploadError) {
-          console.error('Error uploading file:', uploadError);
-          throw uploadError;
+      if (data.files.length > 0) {
+        if (
+          data.files[0].type === 'application/msword' ||
+          data.files[0].type ===
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+          data.files[0].type === 'application/pdf'
+        ) {
+          fileLink = await handleFileUpload(
+            data.files[0],
+            initialData?.report_link.split(
+              '/storage/v1/object/public/reports/'
+            )[1]
+          );
+        } else {
+          fileLink = await handlePdfGenerationAndUpload(
+            data.files,
+            initialData?.report_link.split(
+              '/storage/v1/object/public/reports/'
+            )[1]
+          );
         }
+      }
 
-        const newFilePath = uploadData ? uploadData.path : '';
-
-        const {
-          data: { publicUrl }
-        } = supabase.storage.from('reports').getPublicUrl(newFilePath);
-
-        const fileLink = publicUrl;
-        const redirectionId = reportData ? reportData?.patient_id : '';
-
-        // if data different then, Update report logic
+      if (initialData) {
         const { data: updateData, error: updateError } = await supabase
           .from('reports')
           .update({
@@ -222,128 +267,43 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           })
           .eq('id', initialData.report_id);
 
+        if (updateError) {
+          console.error('Error updating report:', updateError);
+          throw updateError;
+        }
+
         toast({
           title: 'Success',
           description: 'Your report has been successfully updated.'
         });
 
-        if (updateError) {
-          console.error('Error updating report:', updateError);
-          throw updateError;
-        }
         router.refresh();
-        router.push(`/dashboard/patients/${redirectionId}`);
+        router.push(`/dashboard/patients/${initialData.patient_id}`);
       } else {
-        // Insert new report logic
         if (data.files.length === 0) {
           toast({
-            title: 'Upload Report',
-            description: 'At least one report needs to be added'
-          });
-          return;
-        }
-
-        if (
-          (data.files[0].type === 'application/msword' ||
-            data.files[0].type === 'application/pdf' ||
-            data.files[0].type ===
-              'application/vnd.openxmlformats-officedocument.wordprocessingml.document') &&
-          data.files.length > 1
-        ) {
-          toast({
             title: 'Attention',
-            description: 'No more than one doc or pdf file is allowed'
+            description: 'Atleast one doc/pdf file or image is required.'
           });
-          return;
+          return
         }
 
-        const { data: patientData, error } = await supabase
+        const { data: patientData, error: patientError } = await supabase
           .from('patients')
           .select('*')
           .eq('id', patientId)
           .single();
 
-        const patient = patientData ? patientData : {};
-
-        let fileLink;
-
-        if (
-          data.files[0].type === 'application/msword' ||
-          data.files[0].type ===
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ) {
-          const currentDateTime = new Date()
-            .toISOString()
-            .replace(/[:.-]/g, '_');
-          const fileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}`;
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from('reports')
-              .upload(`public/${fileName}`, data.files[0]);
-
-          if (uploadError) {
-            console.error('Error uploading file:', uploadError);
-            throw uploadError;
-          }
-
-          const {
-            data: { publicUrl }
-          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-          fileLink = publicUrl;
-        } else if (data.files[0].type === 'application/pdf') {
-          const currentDateTime = new Date()
-            .toISOString()
-            .replace(/[:.-]/g, '_');
-          const fileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}`;
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from('reports')
-              .upload(`public/${fileName}`, data.files[0]);
-
-          if (uploadError) {
-            console.error('Error uploading file:', uploadError);
-            throw uploadError;
-          }
-
-          const {
-            data: { publicUrl }
-          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-          fileLink = publicUrl;
-        } else {
-          // Logic to generate new link for exsiting report
-          const currentDateTime = new Date()
-            .toISOString()
-            .replace(/[:.-]/g, '_');
-          const pdfBlob = await convertImagesToPDF(data.files);
-          const pdfFileName = `${patient?.first_name}_${patient?.last_name}_${currentDateTime}.pdf`;
-          const pdfFile = new File([pdfBlob], pdfFileName, {
-            type: 'application/pdf'
-          });
-
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from('reports')
-              .upload(`public/${pdfFile.name}`, pdfFile);
-
-          if (uploadError) {
-            console.error('Error uploading file:', uploadError);
-            throw uploadError;
-          }
-
-          const {
-            data: { publicUrl }
-          } = supabase.storage.from('reports').getPublicUrl(uploadData.path);
-
-          fileLink = publicUrl;
+        if (patientError) {
+          console.error('Error fetching patient data:', patientError);
+          throw patientError;
         }
 
         const { data: reportData, error: reportError } = await supabase
           .from('reports')
           .insert([
             {
-              user_id: patient.user_id,
+              user_id: patientData.user_id,
               patient_id: patientId,
               report_title: data.title,
               report_description: data.description,
@@ -352,16 +312,18 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
           ])
           .select();
 
-        toast({
-          title: 'Success',
-          description: 'Your report has been successfully submitted.'
-        });
         if (reportError) {
           console.error('Error inserting report:', reportError);
           throw reportError;
         }
+
+        toast({
+          title: 'Success',
+          description: 'Your report has been successfully submitted.'
+        });
+
         router.refresh();
-        router.push(`/dashboard/patients/${patientVaraible}`);
+        router.push(`/dashboard/patients/${patientId}`);
       }
     } catch (error: any) {
       console.error('An error occurred:', error);
@@ -373,6 +335,10 @@ export const ReportsForm: React.FC<PatientsFormProps> = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onSubmit = (data: PatientsFormValues) => {
+    handleSubmit(data, initialData, patientId as string);
   };
 
   const onDelete = async () => {
